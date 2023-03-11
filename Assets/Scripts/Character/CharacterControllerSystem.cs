@@ -23,10 +23,12 @@ public partial struct CharacterControllerSystem : ISystem
 
         // Debug.Log("sdf");
         var movement = new float3(Input.GetAxis("Horizontal"), 0, Input.GetAxis("Vertical"));
+        var mouseX = Input.GetAxis("Mouse X"); 
 
         var playerCharacterMoveJob = new PlayerCharacterMoveJob()
         {
-            movement = movement
+            movement = movement,
+            mouseX = mouseX
         };
         // playerCharacterMoveJob.Run();
         // playerCharacterMoveJob.Run();
@@ -39,10 +41,12 @@ public partial struct CharacterControllerSystem : ISystem
     [BurstCompile]
     public partial struct PlayerCharacterMoveJob : IJobEntity
     {
-        public float3 movement; 
+        public float3 movement;
+        public float mouseX;
         public void Execute(ref LocalTransform transform)
         {
-            transform.Position += movement; 
+            transform.Position += movement;
+            transform.Rotate(); //todo --> fix this
             // var movement = new float3(Input.GetAxis("Horizontal"), 0, Input.GetAxis("Vertical"));
             //
             // Debug.Log(transform);

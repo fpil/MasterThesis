@@ -11,6 +11,7 @@ public partial class CameraTargetFollowSystem : SystemBase
         Entities.WithAll<PlayerTagComponent>().ForEach((ref LocalTransform localTransform) =>
         {
             FollowPlayer.Instance.UpdateTargetPosition(localTransform.Position);
+            FollowPlayer.Instance.UpdateTargetRotation(localTransform.Rotation);
 
         }).WithoutBurst().Run();
     }

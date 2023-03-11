@@ -7,6 +7,7 @@ public class FollowPlayer : MonoBehaviour
     
     public Vector3 offset;
     Vector3 targetPosition;
+    Quaternion targetRotation;
 
     public Camera mainCamera;
 
@@ -33,6 +34,10 @@ public class FollowPlayer : MonoBehaviour
     {
         targetPosition = position;
     }
+    public void UpdateTargetRotation(Quaternion rotation)
+    {
+        targetRotation = rotation;
+    }
 
     private void LateUpdate()
     {
@@ -41,8 +46,8 @@ public class FollowPlayer : MonoBehaviour
             Debug.Log("No player follow target");
             return;
         }
-        Debug.Log(mainCamera.gameObject.transform);
         mainCamera.gameObject.transform.position = new Vector3(targetPosition.x ,0, targetPosition.z) + offset;
+        mainCamera.gameObject.transform.rotation = targetRotation;
     }
    
 }

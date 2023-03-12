@@ -42,6 +42,7 @@ public partial struct CharacterControllerSystem : ISystem
     [BurstCompile]
     public partial struct PlayerCharacterMoveJob : IJobEntity
     {
+        //todo --> make new script for updating the rotation
         public float3 movement;
         public float mouseX;
         public float deltaTime; 
@@ -53,6 +54,7 @@ public partial struct CharacterControllerSystem : ISystem
             transform.Rotation = math.mul(transform.Rotation, rotation);
 
             float3 rotatedDirection = math.rotate(transform.Rotation, movement);
+            rotatedDirection.y = 0;
             transform.Position += rotatedDirection * 5 * deltaTime;
         }
     }

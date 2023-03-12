@@ -19,7 +19,7 @@ public partial struct CharacterControllerSystem : ISystem
     [BurstCompile]
     public void OnUpdate(ref SystemState state)
     {
-        // var deltaTime = state.WorldUnmanaged.Time.DeltaTime;
+        var deltaTime = state.WorldUnmanaged.Time.DeltaTime;
 
         // Debug.Log("sdf");
         var movement = new float3(Input.GetAxis("Horizontal"), 0, Input.GetAxis("Vertical"));
@@ -28,7 +28,8 @@ public partial struct CharacterControllerSystem : ISystem
         var playerCharacterMoveJob = new PlayerCharacterMoveJob()
         {
             movement = movement,
-            mouseX = mouseX
+            mouseX = mouseX,
+            deltaTime = deltaTime
         };
         // playerCharacterMoveJob.Run();
         // playerCharacterMoveJob.Run();
@@ -43,13 +44,16 @@ public partial struct CharacterControllerSystem : ISystem
     {
         public float3 movement;
         public float mouseX;
+        public float deltaTime; 
         public void Execute(ref LocalTransform transform)
         {
-            transform.Position += movement;
-            transform.Rotate(); //todo --> fix this
-            // var movement = new float3(Input.GetAxis("Horizontal"), 0, Input.GetAxis("Vertical"));
-            //
-            // Debug.Log(transform);
+            float rotationSpeed = 0.2f; 
+
+            quaternion rotation = quaternion.RotateY(mouseX * rotationSpeed);
+            transform.Rotation = math.mul(transform.Rotation, rotation);
+
+            float3 rotatedDirection = math.rotate(transform.Rotation, movement);
+            transform.Position += rotatedDirection * 5 * deltaTime;
         }
     }
 }

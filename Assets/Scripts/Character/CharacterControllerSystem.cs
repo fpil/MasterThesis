@@ -21,14 +21,15 @@ public partial struct CharacterControllerSystem : ISystem
     {
         var deltaTime = state.WorldUnmanaged.Time.DeltaTime;
 
-        // Debug.Log("sdf");
         var movement = new float3(Input.GetAxis("Horizontal"), 0, Input.GetAxis("Vertical"));
-        var mouseX = Input.GetAxis("Mouse X"); 
+        var mouseX = Input.GetAxis("Mouse X");
+        var mouseY = Input.GetAxis("Mouse Y");
 
         var playerCharacterMoveJob = new PlayerCharacterMoveJob()
         {
             movement = movement,
             mouseX = mouseX,
+            mouseY = mouseY,
             deltaTime = deltaTime
         };
         // playerCharacterMoveJob.Run();
@@ -45,10 +46,11 @@ public partial struct CharacterControllerSystem : ISystem
         //todo --> make new script for updating the rotation
         public float3 movement;
         public float mouseX;
+        public float mouseY;
         public float deltaTime; 
         public void Execute(ref LocalTransform transform)
         {
-            float rotationSpeed = 0.2f; 
+            float rotationSpeed = 0.2f;
 
             quaternion rotation = quaternion.RotateY(mouseX * rotationSpeed);
             transform.Rotation = math.mul(transform.Rotation, rotation);

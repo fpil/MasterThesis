@@ -30,10 +30,10 @@ public partial struct CharacterControllerSystem : ISystem
             movement = movement,
             deltaTime = deltaTime, 
         };
-        // playerCharacterMoveJob.Run();
-        // playerCharacterMoveJob.Run();
 
-        state.Dependency = playerCharacterMoveJob.ScheduleParallel(state.Dependency);
+        
+        playerCharacterMoveJob.Run(); //main thread
+        // state.Dependency = playerCharacterMoveJob.ScheduleParallel(state.Dependency);
 
     }
     [WithAll(typeof(PlayerTagComponent))]

@@ -64,7 +64,7 @@ public class FollowPlayer : MonoBehaviour
 
         //Update camera position and rotation 
         var camera = mainCamera.gameObject;
-        camera.transform.position = new Vector3(targetPosition.x ,0, targetPosition.z) + offset;
+        camera.transform.position = new Vector3(targetPosition.x ,targetPosition.y, targetPosition.z) + offset;
         camera.gameObject.transform.rotation = Quaternion.Euler(xRotation, YRotation, 0);
     }
 }

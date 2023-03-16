@@ -1,3 +1,4 @@
+using System;
 using Unity.Entities;
 using Unity.Mathematics;
 using UnityEngine;
@@ -12,6 +13,9 @@ public class FollowPlayer : MonoBehaviour
     public Camera mainCamera;
 
     public static FollowPlayer Instance;
+    private float xRotation; 
+    private float YRotation;
+    private float camSpeed = 255f; 
 
     private void Awake()
     {
@@ -28,6 +32,8 @@ public class FollowPlayer : MonoBehaviour
     void Start()
     {
         mainCamera = Camera.main;
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
     }
 
     public void UpdateTargetPosition(float3 position)
@@ -41,13 +47,24 @@ public class FollowPlayer : MonoBehaviour
 
     private void LateUpdate()
     {
+        //Rotate camera 
+        float mouseY = Input.GetAxis("Mouse Y") * Time.deltaTime * camSpeed;
+        float mouseX = Input.GetAxis("Mouse X") * Time.deltaTime * camSpeed;
+        xRotation -= mouseY;
+        //Clamp x rotation
+        xRotation = Mathf.Clamp(xRotation, -80f, 80f); 
+        YRotation += mouseX;
+
+        
         if (targetPosition == null)
         {
             Debug.Log("No player follow target");
             return;
         }
-        mainCamera.gameObject.transform.position = new Vector3(targetPosition.x ,0, targetPosition.z) + offset;
-        mainCamera.gameObject.transform.rotation = targetRotation;
+
+        //Update camera position and rotation 
+        var camera = mainCamera.gameObject;
+        camera.transform.position = new Vector3(targetPosition.x ,0, targetPosition.z) + offset;
+        camera.gameObject.transform.rotation = Quaternion.Euler(xRotation, YRotation, 0);
     }
-   
 }

@@ -22,15 +22,13 @@ public partial struct CharacterControllerSystem : ISystem
         var deltaTime = state.WorldUnmanaged.Time.DeltaTime;
 
         var movement = new float3(Input.GetAxis("Horizontal"), 0, Input.GetAxis("Vertical"));
-        var mouseX = Input.GetAxis("Mouse X");
-        var mouseY = Input.GetAxis("Mouse Y");
-
+        var cameraTransform = Camera.main.transform.rotation; 
+        
         var playerCharacterMoveJob = new PlayerCharacterMoveJob()
         {
+            cameraTransform = cameraTransform,
             movement = movement,
-            mouseX = mouseX,
-            mouseY = mouseY,
-            deltaTime = deltaTime
+            deltaTime = deltaTime, 
         };
         // playerCharacterMoveJob.Run();
         // playerCharacterMoveJob.Run();
@@ -38,23 +36,22 @@ public partial struct CharacterControllerSystem : ISystem
         state.Dependency = playerCharacterMoveJob.ScheduleParallel(state.Dependency);
 
     }
-    
     [WithAll(typeof(PlayerTagComponent))]
     [BurstCompile]
     public partial struct PlayerCharacterMoveJob : IJobEntity
     {
+        public Quaternion cameraTransform; 
         //todo --> make new script for updating the rotation
         public float3 movement;
-        public float mouseX;
-        public float mouseY;
-        public float deltaTime; 
+        public float deltaTime;
         public void Execute(ref LocalTransform transform)
         {
-            float rotationSpeed = 0.2f;
+            //Set the rotation of the character to the camera rotation
+            transform.Rotation = cameraTransform;
+            transform.Rotation.value.x = 0;
+            transform.Rotation.value.z = 0;
 
-            quaternion rotation = quaternion.RotateY(mouseX * rotationSpeed);
-            transform.Rotation = math.mul(transform.Rotation, rotation);
-
+            //Move the character towards its orientation
             float3 rotatedDirection = math.rotate(transform.Rotation, movement);
             rotatedDirection.y = 0;
             transform.Position += rotatedDirection * 5 * deltaTime;

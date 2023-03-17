@@ -20,8 +20,7 @@ namespace OOD.Scripts.Enemies
         }
 
         public override void Attack() {
-            // deal damage to the player based on the goblin's attackDamage
-            Debug.Log("Attack");
+            // Debug.Log("Attack");
         }
 
         private void OnCollisionEnter(Collision other)

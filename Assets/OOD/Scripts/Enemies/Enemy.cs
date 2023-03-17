@@ -14,9 +14,18 @@ public class Enemy : MonoBehaviour
     public virtual void Attack()
     {
     }
+    public virtual void Die()
+    {
+        //Destroy gameobject when the enemy has no more health
+        Destroy(gameObject);
+    }
 
     private void Update()
     {
         Move();
+        if (health <= 0)
+        {
+            Die();
+        }
     }
 }

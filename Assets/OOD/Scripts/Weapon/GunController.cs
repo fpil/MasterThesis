@@ -1,3 +1,5 @@
+using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace OOD.Scripts.Weapon
@@ -21,6 +23,14 @@ namespace OOD.Scripts.Weapon
             GameObject bullet = Instantiate(bulletPrefab, muzzleTransform.position, muzzleTransform.rotation);
             Rigidbody rb = bullet.GetComponent<Rigidbody>();
             rb.AddForce(muzzleTransform.forward * 2000f);
+            
+            //Destroy bullet again
+            StartCoroutine(DestroyBulletAfterDelay(bullet, 2));
+        }
+        IEnumerator DestroyBulletAfterDelay(GameObject bullet, float delay)
+        {
+            yield return new WaitForSeconds(delay);
+            Destroy(bullet);
         }
     }
 }

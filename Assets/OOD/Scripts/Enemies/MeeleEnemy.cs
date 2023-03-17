@@ -30,6 +30,14 @@ namespace OOD.Scripts.Enemies
             {
                 Attack();
             }
+            if (other.gameObject.tag == "Bullet1")
+            {
+                //Decrease health of enemy
+                health -= 5; //todo --> change the value to be bullet specific 
+
+                //Destroy the bullet on impact with enemy
+                Destroy(other.gameObject);
+            }
         }
     }
 }

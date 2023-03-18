@@ -1,24 +1,27 @@
-using UnityEngine;
 using Unity.Entities;
+using UnityEngine;
 
-class SpawnerAuthoring : MonoBehaviour
+namespace DOD.Scripts
 {
-    public GameObject Prefab;
-    public float SpawnRate;
-}
-
-class SpawnerBaker : Baker<SpawnerAuthoring>
-{
-    public override void Bake(SpawnerAuthoring authoring)
+    class SpawnerAuthoring : MonoBehaviour
     {
-        AddComponent(new Spawner
+        public GameObject Prefab;
+        public float SpawnRate;
+    }
+
+    class SpawnerBaker : Baker<SpawnerAuthoring>
+    {
+        public override void Bake(SpawnerAuthoring authoring)
         {
-            // By default, each authoring GameObject turns into an Entity.
-            // Given a GameObject (or authoring component), GetEntity looks up the resulting Entity.
-            Prefab = GetEntity(authoring.Prefab),
-            SpawnPosition = authoring.transform.position,
-            NextSpawnTime = 0.0f,
-            SpawnRate = authoring.SpawnRate
-        });
+            AddComponent(new Spawner
+            {
+                // By default, each authoring GameObject turns into an Entity.
+                // Given a GameObject (or authoring component), GetEntity looks up the resulting Entity.
+                Prefab = GetEntity(authoring.Prefab),
+                SpawnPosition = authoring.transform.position,
+                NextSpawnTime = 0.0f,
+                SpawnRate = authoring.SpawnRate
+            });
+        }
     }
 }

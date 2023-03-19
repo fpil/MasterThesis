@@ -203,7 +203,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 154531520}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 3.7, y: 1.2, z: -6.85}
+  m_LocalPosition: {x: 3.7, y: 1.2, z: -38.1}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -432,6 +432,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   bulletSpawnPosition: {fileID: 337136365}
+  Prefab: {fileID: 0}
 --- !u!1001 &247915132
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -550,6 +551,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   Prefab: {fileID: 3825097995350037644, guid: 5c395cdaa69bf28469ea3ae8a01acdb7, type: 3}
+  SpawnPositionPrefab: {fileID: 0}
+  SpawnPositionX: 0
   SpawnRate: 0.1
 --- !u!1 &337136365
 GameObject:
@@ -562,6 +565,7 @@ GameObject:
   - component: {fileID: 337136366}
   - component: {fileID: 337136368}
   - component: {fileID: 337136367}
+  - component: {fileID: 337136369}
   m_Layer: 0
   m_Name: Muzzle (1)
   m_TagString: Untagged
@@ -634,6 +638,22 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 337136365}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!114 &337136369
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 337136365}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1e8a4b7c6bb57d942ac6a2e7e92e73bc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  Prefab: {fileID: 1907918821771943251, guid: 736250591732d0a4caffb60a3df72620, type: 3}
+  SpawnPositionPrefab: {fileID: 337136365}
+  SpawnPositionX: 0
+  SpawnRate: 1
 --- !u!1 &1903342271
 GameObject:
   m_ObjectHideFlags: 0

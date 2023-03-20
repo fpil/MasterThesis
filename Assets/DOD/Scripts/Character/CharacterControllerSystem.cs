@@ -5,7 +5,7 @@ using Unity.Transforms;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-[BurstCompile]
+// [BurstCompile]
 public partial struct CharacterControllerSystem : ISystem
 {
     public void OnCreate(ref SystemState state)
@@ -16,7 +16,7 @@ public partial struct CharacterControllerSystem : ISystem
     {
     }
     
-    [BurstCompile]
+    // [BurstCompile]
     public void OnUpdate(ref SystemState state)
     {
         var deltaTime = state.WorldUnmanaged.Time.DeltaTime;
@@ -37,7 +37,7 @@ public partial struct CharacterControllerSystem : ISystem
 
     }
     [WithAll(typeof(PlayerTagComponent))]
-    [BurstCompile]
+    // [BurstCompile]
     public partial struct PlayerCharacterMoveJob : IJobEntity
     {
         public Quaternion cameraTransform; 

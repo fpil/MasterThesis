@@ -135,7 +135,7 @@ GameObject:
   - component: {fileID: 76907765}
   - component: {fileID: 76907764}
   m_Layer: 0
-  m_Name: Muzzle
+  m_Name: MuzzleGameObject
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

@@ -1,4 +1,6 @@
+using Assets.DOD.Scripts.Bullets;
 using DOD.Scripts.Bullets;
+using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Transforms;
@@ -7,9 +9,10 @@ using UnityEngine;
 public partial struct BulletSpawnSystem : ISystem
 {
     // ComponentLookup<WorldTransform> m_WorldTransformLookup;
+    ComponentLookup<WorldTransform> m_WorldTransformLookup;
     public void OnCreate(ref SystemState state)
     {
-        // m_WorldTransformLookup = state.GetComponentLookup<WorldTransform>(true);
+        m_WorldTransformLookup = state.GetComponentLookup<WorldTransform>(true);
     }
 
     public void OnDestroy(ref SystemState state)
@@ -18,17 +21,32 @@ public partial struct BulletSpawnSystem : ISystem
 
     public void OnUpdate(ref SystemState state)
     {
+        m_WorldTransformLookup.Update(ref state);
+        // Creating an EntityCommandBuffer to defer the structural changes required by instantiation.
+        var ecbSingleton = SystemAPI.GetSingleton<BeginSimulationEntityCommandBufferSystem.Singleton>();
+        var ecb = ecbSingleton.CreateCommandBuffer(state.WorldUnmanaged);
         
-        // m_WorldTransformLookup.Update(ref state);
+        
         if (Input.GetButtonDown("Fire1"))
         {
             //Used for updating the position of the starting position for the bullet
-            var muzzleGameObject = GameObject.Find("MuzzleGameObject");
+            var muzzleGameObject = GameObject.Find("MuzzleGameObject").transform.position;
 
-            foreach (RefRW<BulletSpawnPositionComponent> spawner in SystemAPI.Query<RefRW<BulletSpawnPositionComponent>>())
+            var bulletSpawnJob = new SpawnBulletJob
             {
-                BulletSpawner(ref state, spawner, muzzleGameObject);
-            }
+                // WorldTransformLookup = m_WorldTransformLookup,
+                Ecb = ecb,
+                muzzleGameObject = muzzleGameObject
+            };
+
+            // Schedule execution in a single thread, and do not block main thread.
+            bulletSpawnJob.Run();
+            // state.Dependency = bulletSpawnJob.ScheduleParallel(state.Dependency);
+
+            // foreach (RefRW<BulletSpawnPositionComponent> spawner in SystemAPI.Query<RefRW<BulletSpawnPositionComponent>>())
+            // {
+            //     BulletSpawner(ref state, spawner, muzzleGameObject);
+            // }
         }
 
         
@@ -36,10 +54,27 @@ public partial struct BulletSpawnSystem : ISystem
     
     private void BulletSpawner(ref SystemState state, RefRW<BulletSpawnPositionComponent> spawner, GameObject muzzleGameObject)
     {
-        // var spawnLocalToWorld = WorldTransformLookup[spawner.ValueRO.BulletSpawn];
-        // var bulletTransform = LocalTransform.FromPosition(spawnLocalToWorld.Position);
         var bulletTransform = LocalTransform.FromPosition(muzzleGameObject.transform.position);
         Entity newEntity = state.EntityManager.Instantiate(spawner.ValueRO.BulletPrefab);
         state.EntityManager.SetComponentData(newEntity, LocalTransform.FromPosition(bulletTransform._Position));
+    }
+
+    public partial struct SpawnBulletJob : IJobEntity
+    {
+        public EntityCommandBuffer Ecb;
+
+        public Vector3 muzzleGameObject { get; set; }
+        // public ComponentLookup<WorldTransform> WorldTransformLookup { get; set; }
+
+        void Execute(in BulletSpawnAspect bulletSpawnAspect)
+        {
+            var instance = Ecb.Instantiate(bulletSpawnAspect.BulletPrefab);
+            var cannonBallTransform = LocalTransform.FromPosition(muzzleGameObject);
+            Ecb.SetComponent(instance, cannonBallTransform);
+            Ecb.SetComponent(instance, new BulletFired
+            {
+                _hasFired = 0
+            });
+        }
     }
 }

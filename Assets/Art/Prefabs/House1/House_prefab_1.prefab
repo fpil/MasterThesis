@@ -178,7 +178,7 @@ MonoBehaviour:
     m_Restitution:
       m_Override: 0
       m_Value:
-        Value: 1
+        Value: 0
         CombineMode: 2
     m_BelongsToCategories:
       m_Override: 0
@@ -335,6 +335,11 @@ PrefabInstance:
     - target: {fileID: 975114293921876449, guid: d967f271d37c46143a0d580d0a1044cf,
         type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6171609748604783533, guid: d967f271d37c46143a0d580d0a1044cf,
+        type: 3}
+      propertyPath: m_Material.m_Restitution.m_Value.Value
       value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
@@ -732,7 +737,7 @@ MonoBehaviour:
     m_Restitution:
       m_Override: 0
       m_Value:
-        Value: 1
+        Value: 0
         CombineMode: 2
     m_BelongsToCategories:
       m_Override: 0

@@ -17,6 +17,7 @@ public struct BulletSpawnPositionComponent : IComponentData
     // public Entity BulletSpawn;
 }
 
+
 public class BulletBaker : Baker<BulletSpawnerBaker>
 {
     public override void Bake(BulletSpawnerBaker authoring)
@@ -24,7 +25,7 @@ public class BulletBaker : Baker<BulletSpawnerBaker>
         AddComponent(new BulletSpawnPositionComponent
         {
             BulletPrefab = GetEntity(authoring.bulletPrefab),
-            // BulletSpawn = GetEntity(authoring.spawnPosition),
         } );
+        // AddComponent(new BulletHasFiredComponent());
     }
 }

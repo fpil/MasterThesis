@@ -1,4 +1,5 @@
 using Unity.Entities;
+using Unity.Mathematics;
 
 namespace DOD.Scripts.Bullets
 {
@@ -15,8 +16,9 @@ namespace DOD.Scripts.Bullets
         }
     }
 
-    struct BulletFired : IComponentData
+    public struct BulletFired : IComponentData
     {
         public int _hasFired;
+        public float3 fireDirection;
     }
 }

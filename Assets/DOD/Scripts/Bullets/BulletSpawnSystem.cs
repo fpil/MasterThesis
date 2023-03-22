@@ -9,10 +9,10 @@ using UnityEngine;
 public partial struct BulletSpawnSystem : ISystem
 {
     // ComponentLookup<WorldTransform> m_WorldTransformLookup;
-    ComponentLookup<WorldTransform> m_WorldTransformLookup;
+    // ComponentLookup<WorldTransform> m_WorldTransformLookup;
     public void OnCreate(ref SystemState state)
     {
-        m_WorldTransformLookup = state.GetComponentLookup<WorldTransform>(true);
+        // m_WorldTransformLookup = state.GetComponentLookup<WorldTransform>(true);
     }
 
     public void OnDestroy(ref SystemState state)
@@ -21,7 +21,7 @@ public partial struct BulletSpawnSystem : ISystem
 
     public void OnUpdate(ref SystemState state)
     {
-        m_WorldTransformLookup.Update(ref state);
+        // m_WorldTransformLookup.Update(ref state);
         // Creating an EntityCommandBuffer to defer the structural changes required by instantiation.
         var ecbSingleton = SystemAPI.GetSingleton<BeginSimulationEntityCommandBufferSystem.Singleton>();
         var ecb = ecbSingleton.CreateCommandBuffer(state.WorldUnmanaged);

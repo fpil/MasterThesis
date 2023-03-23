@@ -1,4 +1,5 @@
 using Assets.DOD.Scripts.Bullets;
+using DOD.Scripts.Enemies;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
@@ -106,7 +107,7 @@ namespace DOD.Scripts.Bullets
             [field: ReadOnly] public CollisionWorld world { get; set; }
             public EntityManager entityManager;
 
-            public void Execute(in Entity entity, in LocalTransform localTransform, in BulletFired fired)
+            public void Execute(in Entity entity, in LocalTransform localTransform, in BulletFired fired, ref BulletLifeTime lifeTime)
             {
                 var raycastInput = new RaycastInput
                 {
@@ -122,14 +123,14 @@ namespace DOD.Scripts.Bullets
                 {
                     if (hit.Entity != entity)
                     {
-                        bool has = entityManager.HasComponent<BulletTag>(hit.Entity);
+                        bool has = entityManager.HasComponent<MeleeEnemyTag>(hit.Entity);
                         if (has)
                         {
+                            //todo --> deal damage to enemy
+                            lifeTime.currentLifeTime = 2; //This will trigger the bullet to be deleted // todo --> maybe too much a hack
                             Debug.Log(hit.Entity);
                         }
-                        
                     }
-                
                 }
             }
         }

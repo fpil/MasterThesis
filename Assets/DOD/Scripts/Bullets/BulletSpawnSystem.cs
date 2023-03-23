@@ -75,6 +75,10 @@ public partial struct BulletSpawnSystem : ISystem
             {
                 _hasFired = 0
             });
+            Ecb.SetComponent(instance, new BulletLifeTime()
+            {
+                maxLifeTime = 2
+            });
         }
     }
 }

@@ -12,6 +12,7 @@ namespace DOD.Scripts.Bullets
                 // By default, components are zero-initialized.
                 // So in this case, the Speed field in CannonBall will be float3.zero.
                 AddComponent<BulletFired>();
+                AddComponent<BulletLifeTime>();
             }
         }
     }
@@ -20,5 +21,12 @@ namespace DOD.Scripts.Bullets
     {
         public int _hasFired;
         public float3 fireDirection;
+        // public float lifeTime;
+    }
+    
+    public struct BulletLifeTime : IComponentData
+    {
+        public float maxLifeTime;
+        public float currentLifeTime;
     }
 }

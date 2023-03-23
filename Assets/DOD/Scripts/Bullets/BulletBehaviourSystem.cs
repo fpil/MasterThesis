@@ -29,19 +29,13 @@ namespace DOD.Scripts.Bullets
         public void OnUpdate(ref SystemState state)
         {
             var ecbSingleton = SystemAPI.GetSingleton<BeginSimulationEntityCommandBufferSystem.Singleton>();
-            EntityCommandBuffer.ParallelWriter ecb = ecbSingleton.CreateCommandBuffer(state.WorldUnmanaged).AsParallelWriter();
+            EntityCommandBuffer ecb = ecbSingleton.CreateCommandBuffer(state.WorldUnmanaged);
             
             // PhysicsWorld world = SystemAPI.GetSingletonRW<PhysicsWorldSingleton>().ValueRW.PhysicsWorld;
             var collisionWorld = SystemAPI.GetSingleton<PhysicsWorldSingleton>().CollisionWorld;
 
             var deltaTime = state.WorldUnmanaged.Time.DeltaTime;
 
-            
-            
-            // EntityManager.CompleteDependencyBeforeRW<PhysicsWorldSingleton>();
-            
-            // var ecbSingleton = SystemAPI.GetSingleton<BeginSimulationEntityCommandBufferSystem.Singleton>();
-            // var ecb = ecbSingleton.CreateCommandBuffer(state.WorldUnmanaged);
             
             var muzzleGameObject = GameObject.Find("MuzzleGameObject"); //this is not a good approach to ref the position like this
             var vector3 = muzzleGameObject.transform.forward;
@@ -52,24 +46,21 @@ namespace DOD.Scripts.Bullets
                 vector3 = vector3,
                 // Ecb = ecb
             };    
-            //Need to be paralle or race condition
             state.Dependency = updateBulletPositionJob.ScheduleParallel(state.Dependency);
 
-            // updateBulletPositionJob.Run();
             
             var bulletCollisionJob = new BulletCollisionJob()
             {
-                deltaTime = deltaTime,
-                // commandBuffer = ecb,
-                
                 world = collisionWorld
             };    
-            //Need to be paralle or race condition
             state.Dependency = bulletCollisionJob.ScheduleParallel(state.Dependency);
-            // bulletCollisionJob.Run();
             
             
-            
+            var destroyBulletJob = new DestroyBulletJob()
+            {
+                ECB = ecb.AsParallelWriter(),
+            };    
+            state.Dependency = destroyBulletJob.ScheduleParallel(state.Dependency);
             
         }
 
@@ -80,7 +71,7 @@ namespace DOD.Scripts.Bullets
             public Vector3 vector3 { get; set; }
             // public EntityCommandBuffer Ecb;
 
-            public void Execute(ref LocalTransform localTransform, ref BulletFired fired)
+            public void Execute(ref LocalTransform localTransform, ref BulletFired fired, ref BulletLifeTime lifeTime)
             {
                 //Saves the original fire direction
                 if (fired._hasFired == 0)
@@ -95,6 +86,7 @@ namespace DOD.Scripts.Bullets
 
                 //Update position of the bullet
                 localTransform.Position += fired.fireDirection * 100 * deltaTime; //todo --> change the speed parameter to be bullet dependent 
+                lifeTime.currentLifeTime += deltaTime;
 
             }
         }
@@ -103,9 +95,7 @@ namespace DOD.Scripts.Bullets
         [WithAll(typeof(BulletTag))]
         public partial struct BulletCollisionJob : IJobEntity
         {
-            public float deltaTime;
-            // public RaycastInput raycastInput;
-            // public EntityCommandBuffer.ParallelWriter commandBuffer;
+            // public float deltaTime;
             [field: ReadOnly] public CollisionWorld world { get; set; }
 
             public void Execute(in Entity entity, in LocalTransform localTransform, in BulletFired fired)
@@ -119,7 +109,6 @@ namespace DOD.Scripts.Bullets
                 
                 // Debug.DrawLine(raycastInput.Start, raycastInput.End, Color.green, 0.1f);
                 
-                // var hits = new NativeList<Unity.Physics.RaycastHit>(Allocator.Temp);
                 RaycastHit hit = new RaycastHit();
                 if (world.CastRay(raycastInput, out hit))
                 {
@@ -129,8 +118,21 @@ namespace DOD.Scripts.Bullets
                     }
                 
                 }
-                // hits.Dispose();
+            }
+        }
+        
+        [UpdateAfter(typeof(UpdateBulletPositionJob))]
+        [WithAll(typeof(BulletTag))]
+        public partial struct DestroyBulletJob : IJobEntity
+        {
+            public EntityCommandBuffer.ParallelWriter ECB;
 
+            public void Execute([ChunkIndexInQuery] int chunkIndex,in Entity entity, in BulletLifeTime lifeTime)
+            {
+                if (lifeTime.currentLifeTime >= lifeTime.maxLifeTime)
+                {
+                    ECB.DestroyEntity(chunkIndex,entity); //This is expensive calls 
+                }
             }
         }
     }

@@ -38,12 +38,6 @@ namespace DOD.Scripts.Bullets
 
             
             
-            
-            
-            
-            
-            
-            
             // EntityManager.CompleteDependencyBeforeRW<PhysicsWorldSingleton>();
             
             // var ecbSingleton = SystemAPI.GetSingleton<BeginSimulationEntityCommandBufferSystem.Singleton>();
@@ -98,8 +92,9 @@ namespace DOD.Scripts.Bullets
                     // Ecb.RemoveComponent<BulletFired>(entity);
                     
                 }
+
                 //Update position of the bullet
-                localTransform.Position += fired.fireDirection * 10 * deltaTime; //todo --> change the speed parameter to be bullet dependent 
+                localTransform.Position += fired.fireDirection * 100 * deltaTime; //todo --> change the speed parameter to be bullet dependent 
 
             }
         }
@@ -115,38 +110,24 @@ namespace DOD.Scripts.Bullets
 
             public void Execute(in Entity entity, in LocalTransform localTransform, in BulletFired fired)
             {
-                
-                var v = new Vector3(fired.fireDirection.x,fired.fireDirection.y,fired.fireDirection.z)*1;
-                Debug.Log(v );
-
                 var raycastInput = new RaycastInput
                 {
                     Start = localTransform.Position,
-                    End = localTransform.Position*fired.fireDirection,
+                    End = localTransform.Position+fired.fireDirection,//*10*deltaTime,
                     Filter = CollisionFilter.Default
                 };
                 
-                Debug.DrawLine(raycastInput.Start, raycastInput.End, Color.green, 0.1f);
+                // Debug.DrawLine(raycastInput.Start, raycastInput.End, Color.green, 0.1f);
                 
                 // var hits = new NativeList<Unity.Physics.RaycastHit>(Allocator.Temp);
                 RaycastHit hit = new RaycastHit();
-                // Debug.Log(world.CastRay(raycastInput, ref hits));
-
-                // var ray = new PhysicsWorld().CastRay(raycastInput, ref hits); 
-                
                 if (world.CastRay(raycastInput, out hit))
                 {
-                    // Debug.Log("hit");
                     if (hit.Entity != entity)
                     {
                         Debug.Log(hit.Entity);
-
                     }
                 
-                }
-                else
-                {
-                    Debug.Log("Not hit");
                 }
                 // hits.Dispose();
 

@@ -13,12 +13,12 @@ namespace DOD.Scripts.Bullets
     [UpdateAfter(typeof(BulletSpawnSystem))]
     public partial struct BulletBehaviourSystem : ISystem
     {
-        private SystemHandle buildPhysicsWorldSystem;
+        // private SystemHandle buildPhysicsWorldSystem;
         private SystemHandle commandBufferSystem;
 
         public void OnCreate(ref SystemState state)
         {
-            buildPhysicsWorldSystem = state.World.GetOrCreateSystem<BuildPhysicsWorld>(); 
+            // buildPhysicsWorldSystem = state.World.GetOrCreateSystem<BuildPhysicsWorld>(); 
             // commandBufferSystem = state.World.GetOrCreateSystem<EndSimulationEntityCommandBufferSystem>();
         }
 
@@ -28,15 +28,14 @@ namespace DOD.Scripts.Bullets
 
         public void OnUpdate(ref SystemState state)
         {
+            var deltaTime = state.WorldUnmanaged.Time.DeltaTime;
+
             var ecbSingleton = SystemAPI.GetSingleton<BeginSimulationEntityCommandBufferSystem.Singleton>();
             EntityCommandBuffer ecb = ecbSingleton.CreateCommandBuffer(state.WorldUnmanaged);
             
             // PhysicsWorld world = SystemAPI.GetSingletonRW<PhysicsWorldSingleton>().ValueRW.PhysicsWorld;
             var collisionWorld = SystemAPI.GetSingleton<PhysicsWorldSingleton>().CollisionWorld;
 
-            var deltaTime = state.WorldUnmanaged.Time.DeltaTime;
-
-            
             var muzzleGameObject = GameObject.Find("MuzzleGameObject"); //this is not a good approach to ref the position like this
             var vector3 = muzzleGameObject.transform.forward;
 
@@ -47,13 +46,19 @@ namespace DOD.Scripts.Bullets
                 // Ecb = ecb
             };    
             state.Dependency = updateBulletPositionJob.ScheduleParallel(state.Dependency);
+            state.Dependency.Complete();
+
 
             
             var bulletCollisionJob = new BulletCollisionJob()
             {
-                world = collisionWorld
-            };    
-            state.Dependency = bulletCollisionJob.ScheduleParallel(state.Dependency);
+                world = collisionWorld,
+                entityManager = state.World.EntityManager
+            };
+            bulletCollisionJob.Run(); //Cannot be parallel because the entity manger is used // todo --> fix
+            state.Dependency.Complete();
+            // bulletCollisionJob.ScheduleParallel(); 
+            // state.Dependency = bulletCollisionJob.ScheduleParallel(state.Dependency);
             
             
             var destroyBulletJob = new DestroyBulletJob()
@@ -61,6 +66,8 @@ namespace DOD.Scripts.Bullets
                 ECB = ecb.AsParallelWriter(),
             };    
             state.Dependency = destroyBulletJob.ScheduleParallel(state.Dependency);
+            state.Dependency.Complete();
+
             
         }
 
@@ -97,6 +104,7 @@ namespace DOD.Scripts.Bullets
         {
             // public float deltaTime;
             [field: ReadOnly] public CollisionWorld world { get; set; }
+            public EntityManager entityManager;
 
             public void Execute(in Entity entity, in LocalTransform localTransform, in BulletFired fired)
             {
@@ -114,7 +122,12 @@ namespace DOD.Scripts.Bullets
                 {
                     if (hit.Entity != entity)
                     {
-                        Debug.Log(hit.Entity);
+                        bool has = entityManager.HasComponent<BulletTag>(hit.Entity);
+                        if (has)
+                        {
+                            Debug.Log(hit.Entity);
+                        }
+                        
                     }
                 
                 }

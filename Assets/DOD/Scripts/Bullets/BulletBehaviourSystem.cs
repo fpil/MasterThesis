@@ -15,7 +15,7 @@ namespace DOD.Scripts.Bullets
     public partial struct BulletBehaviourSystem : ISystem
     {
         // private SystemHandle buildPhysicsWorldSystem;
-        private SystemHandle commandBufferSystem;
+        // private SystemHandle commandBufferSystem;
 
         public void OnCreate(ref SystemState state)
         {
@@ -30,13 +30,9 @@ namespace DOD.Scripts.Bullets
         public void OnUpdate(ref SystemState state)
         {
             var deltaTime = state.WorldUnmanaged.Time.DeltaTime;
-
             var ecbSingleton = SystemAPI.GetSingleton<BeginSimulationEntityCommandBufferSystem.Singleton>();
             EntityCommandBuffer ecb = ecbSingleton.CreateCommandBuffer(state.WorldUnmanaged);
-            
-            // PhysicsWorld world = SystemAPI.GetSingletonRW<PhysicsWorldSingleton>().ValueRW.PhysicsWorld;
             var collisionWorld = SystemAPI.GetSingleton<PhysicsWorldSingleton>().CollisionWorld;
-
             var muzzleGameObject = GameObject.Find("MuzzleGameObject"); //this is not a good approach to ref the position like this
             var vector3 = muzzleGameObject.transform.forward;
 
@@ -44,13 +40,10 @@ namespace DOD.Scripts.Bullets
             {
                 deltaTime = deltaTime,
                 vector3 = vector3,
-                // Ecb = ecb
             };    
             state.Dependency = updateBulletPositionJob.ScheduleParallel(state.Dependency);
             state.Dependency.Complete();
 
-
-            
             var bulletCollisionJob = new BulletCollisionJob()
             {
                 world = collisionWorld,
@@ -58,9 +51,6 @@ namespace DOD.Scripts.Bullets
             };
             bulletCollisionJob.Run(); //Cannot be parallel because the entity manger is used // todo --> fix
             state.Dependency.Complete();
-            // bulletCollisionJob.ScheduleParallel(); 
-            // state.Dependency = bulletCollisionJob.ScheduleParallel(state.Dependency);
-            
             
             var destroyBulletJob = new DestroyBulletJob()
             {
@@ -68,8 +58,6 @@ namespace DOD.Scripts.Bullets
             };    
             state.Dependency = destroyBulletJob.ScheduleParallel(state.Dependency);
             state.Dependency.Complete();
-
-            
         }
 
         [WithAll(typeof(BulletTag))]
@@ -78,7 +66,6 @@ namespace DOD.Scripts.Bullets
             public float deltaTime;
             public Vector3 vector3 { get; set; }
             // public EntityCommandBuffer Ecb;
-
             public void Execute(ref LocalTransform localTransform, ref BulletFired fired, ref BulletLifeTime lifeTime)
             {
                 //Saves the original fire direction
@@ -89,13 +76,10 @@ namespace DOD.Scripts.Bullets
 
                     //This is expensive structural change
                     // Ecb.RemoveComponent<BulletFired>(entity);
-                    
                 }
-
                 //Update position of the bullet
                 localTransform.Position += fired.fireDirection * 100 * deltaTime; //todo --> change the speed parameter to be bullet dependent 
                 lifeTime.currentLifeTime += deltaTime;
-
             }
         }
         
@@ -103,7 +87,6 @@ namespace DOD.Scripts.Bullets
         [WithAll(typeof(BulletTag))]
         public partial struct BulletCollisionJob : IJobEntity
         {
-            // public float deltaTime;
             [field: ReadOnly] public CollisionWorld world { get; set; }
             public EntityManager entityManager;
 
@@ -112,7 +95,7 @@ namespace DOD.Scripts.Bullets
                 var raycastInput = new RaycastInput
                 {
                     Start = localTransform.Position,
-                    End = localTransform.Position+fired.fireDirection,//*10*deltaTime,
+                    End = localTransform.Position+fired.fireDirection,
                     Filter = CollisionFilter.Default
                 };
                 
@@ -123,8 +106,7 @@ namespace DOD.Scripts.Bullets
                 {
                     if (hit.Entity != entity)
                     {
-                        bool has = entityManager.HasComponent<MeleeEnemyTag>(hit.Entity);
-                        if (has)
+                        if (entityManager.HasComponent<MeleeEnemyTag>(hit.Entity))
                         {
                             //todo --> deal damage to enemy
                             lifeTime.currentLifeTime = 2; //This will trigger the bullet to be deleted // todo --> maybe too much a hack
@@ -140,7 +122,6 @@ namespace DOD.Scripts.Bullets
         public partial struct DestroyBulletJob : IJobEntity
         {
             public EntityCommandBuffer.ParallelWriter ECB;
-
             public void Execute([ChunkIndexInQuery] int chunkIndex,in Entity entity, in BulletLifeTime lifeTime)
             {
                 if (lifeTime.currentLifeTime >= lifeTime.maxLifeTime)

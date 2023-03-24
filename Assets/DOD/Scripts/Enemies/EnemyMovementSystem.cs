@@ -9,7 +9,6 @@ public partial struct EnemyMovementSystem : ISystem
     public void OnCreate(ref SystemState state)
     {
         playerQuery = state.GetEntityQuery(ComponentType.ReadOnly<PlayerTagComponent>());
-
     }
 
     public void OnDestroy(ref SystemState state)
@@ -18,10 +17,9 @@ public partial struct EnemyMovementSystem : ISystem
 
     public void OnUpdate(ref SystemState state)
     {
-        Entity playerEntity = playerQuery.GetSingletonEntity();
+        Entity playerEntity = playerQuery.GetSingletonEntity(); //Maybe not the best approach to use a singleton
         LocalTransform playerTransform = state.EntityManager.GetComponentData<LocalTransform>(playerEntity);
         var deltaTime = state.WorldUnmanaged.Time.DeltaTime;
-
         
         var moveTowardPlayerJob = new MoveTowardPlayerJob()
         {
@@ -38,8 +36,6 @@ public partial struct EnemyMovementSystem : ISystem
     {
         public LocalTransform PlayerTransform { get; set; }
         public float deltaTime;
-
-
         void Execute(ref LocalTransform localTransform)
         {
             Vector3 direction = (PlayerTransform.Position - localTransform.Position);
@@ -47,6 +43,5 @@ public partial struct EnemyMovementSystem : ISystem
             localTransform.Position += new float3(direction * 5 * deltaTime);
             localTransform.Rotation = Quaternion.LookRotation(direction);
         }
-
     }
 }

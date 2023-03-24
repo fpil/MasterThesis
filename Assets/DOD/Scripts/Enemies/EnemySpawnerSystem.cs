@@ -50,6 +50,7 @@ public partial struct EnemySpawnerSystem : ISystem
                 var instance = Ecb.Instantiate(enemySpawnAspect.MeleePrefab);
                 var enemyTransForm = LocalTransform.FromPosition(spawnPosition);
                 Ecb.SetComponent(instance,enemyTransForm);
+                Ecb.AddComponent(instance, new EnemyTag());
                 //Add more components 
             }
         }

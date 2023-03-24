@@ -1,4 +1,5 @@
 using Unity.Burst;
+using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Transforms;
@@ -30,8 +31,6 @@ public partial struct CharacterControllerSystem : ISystem
             movement = movement,
             deltaTime = deltaTime, 
         };
-
-        
         playerCharacterMoveJob.Run(); //main thread
         // state.Dependency = playerCharacterMoveJob.ScheduleParallel(state.Dependency);
 

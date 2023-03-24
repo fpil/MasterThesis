@@ -109,9 +109,10 @@ namespace DOD.Scripts.Bullets
                         if (entityManager.HasComponent<MeleeEnemyTag>(hit.Entity))
                         {
                             //todo --> deal damage to enemy
-                            lifeTime.currentLifeTime = 2; //This will trigger the bullet to be deleted // todo --> maybe too much a hack
                             Debug.Log(hit.Entity);
                         }
+                        //Destroy bullet if it collides with something
+                        lifeTime.currentLifeTime = 2; // todo --> maybe too much a hack
                     }
                 }
             }

@@ -1,8 +1,5 @@
-using Assets.DOD.Scripts.Bullets;
 using DOD.Scripts.Bullets;
-using Unity.Collections;
 using Unity.Entities;
-using Unity.Mathematics;
 using Unity.Transforms;
 using UnityEngine;
 
@@ -52,12 +49,12 @@ public partial struct BulletSpawnSystem : ISystem
         
     }
     
-    private void BulletSpawner(ref SystemState state, RefRW<BulletSpawnPositionComponent> spawner, GameObject muzzleGameObject)
-    {
-        var bulletTransform = LocalTransform.FromPosition(muzzleGameObject.transform.position);
-        Entity newEntity = state.EntityManager.Instantiate(spawner.ValueRO.BulletPrefab);
-        state.EntityManager.SetComponentData(newEntity, LocalTransform.FromPosition(bulletTransform._Position));
-    }
+    // private void BulletSpawner(ref SystemState state, RefRW<BulletSpawnPositionComponent> spawner, GameObject muzzleGameObject)
+    // {
+    //     var bulletTransform = LocalTransform.FromPosition(muzzleGameObject.transform.position);
+    //     Entity newEntity = state.EntityManager.Instantiate(spawner.ValueRO.BulletPrefab);
+    //     state.EntityManager.SetComponentData(newEntity, LocalTransform.FromPosition(bulletTransform._Position));
+    // }
 
     public partial struct SpawnBulletJob : IJobEntity
     {

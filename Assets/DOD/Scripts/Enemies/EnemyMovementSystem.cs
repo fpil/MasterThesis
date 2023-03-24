@@ -40,8 +40,27 @@ public partial struct EnemyMovementSystem : ISystem
         {
             Vector3 direction = (PlayerTransform.Position - localTransform.Position);
             direction = direction.normalized;
-            localTransform.Position += new float3(direction * 5 * deltaTime);
+            localTransform.Position += new float3(direction * 5 * deltaTime); //Todo --> adjust the speed to be specific to the enemy
             localTransform.Rotation = Quaternion.LookRotation(direction);
+        }
+    }
+    
+    [WithAll(typeof(EnemyTag))]
+    public partial struct EnemySeparationJob : IJobEntity
+    {
+        public float deltaTime;
+        void Execute(ref LocalTransform localTransform)
+        {
+            // float separationRadius = 2f;
+            // float separationForce = 1f;
+            // Collider[] colliders = Physics.OverlapSphere(transform.position, separationRadius);
+            // foreach (Collider collider in colliders) {
+            //     if (collider.gameObject.CompareTag("MeeleEnemy") && collider.gameObject != gameObject) { //Todo --> change the default tag when more enemies are added
+            //         Vector3 separationDirection = (transform.position - collider.transform.position).normalized;
+            //         separationDirection.y = 0f;
+            //         transform.position += separationDirection * separationForce * Time.deltaTime;
+            //     }
+            // }
         }
     }
 }

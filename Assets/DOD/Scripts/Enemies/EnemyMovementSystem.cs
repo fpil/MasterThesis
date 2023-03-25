@@ -25,30 +25,25 @@ public partial struct EnemyMovementSystem : ISystem
         var deltaTime = state.WorldUnmanaged.Time.DeltaTime;
         var collisionWorld = SystemAPI.GetSingleton<PhysicsWorldSingleton>().CollisionWorld;
 
-        
         var moveTowardPlayerJob = new MoveTowardPlayerJob()
         {
             PlayerTransform = playerTransform,
-            deltaTime = deltaTime,
+            deltaTime = deltaTime
         };
-        // moveTowardPlayerJob.Run();
         state.Dependency = moveTowardPlayerJob.ScheduleParallel(state.Dependency);
         state.Dependency.Complete();
 
-
-        // var allLocalTransform = state.World.EntityManager.GetComponentData<LocalTransform>(true); 
-        
         var enemySeparationJob = new EnemySeparationJob()
         {
             deltaTime = deltaTime,
             world = collisionWorld,
-            entityManager = state.World.EntityManager
+            EntityPositions = SystemAPI.GetComponentLookup<LocalToWorld>(true), //Possibly Expensive
+            Enemies = SystemAPI.GetComponentLookup<EnemyTag>(true) //Possibly Expensive
         };
-        enemySeparationJob.Run();
-        // state.Dependency = enemySeparationJob.ScheduleParallel(state.Dependency);
-        // state.Dependency.Complete();
-
+        state.Dependency = enemySeparationJob.ScheduleParallel(state.Dependency);
+        state.Dependency.Complete();
     }
+    
     [BurstCompile]
     [WithAll(typeof(EnemyTag))]
     public partial struct MoveTowardPlayerJob : IJobEntity
@@ -57,9 +52,9 @@ public partial struct EnemyMovementSystem : ISystem
         public float deltaTime;
         void Execute(ref LocalTransform localTransform)
         {
-            Vector3 direction = (PlayerTransform.Position - localTransform.Position);
+            Vector3 direction = PlayerTransform.Position - localTransform.Position;
             direction = direction.normalized;
-            localTransform.Position += new float3(direction * 5 * deltaTime); //Todo --> adjust the speed to be specific to the enemy
+            localTransform.Position += new float3(direction * 3 * deltaTime); //Todo --> adjust the speed to be specific to the enemy
             localTransform.Rotation = Quaternion.LookRotation(direction);
         }
     }
@@ -70,56 +65,30 @@ public partial struct EnemyMovementSystem : ISystem
     {
         public float deltaTime;
         [field: ReadOnly] public CollisionWorld world { get; set; }
-        public EntityManager entityManager;
-        // [ReadOnly] public ComponentTypeHandle<LocalTransform> LocalTransformType;
+        [ReadOnly] 
+        public ComponentLookup<LocalToWorld> EntityPositions;
+        [ReadOnly]
+        public ComponentLookup<EnemyTag> Enemies;
 
         void Execute(in Entity entity, ref LocalTransform localTransform)
         {
-            
-            float separationRadius = 2f;
+            float separationRadius = 1f;
             float separationForce = 1f;
             var result = new NativeList<DistanceHit>(Allocator.TempJob);
             if (world.OverlapSphere(localTransform.Position, separationRadius, ref result, CollisionFilter.Default))
             {
                 for (int i = 0; i < result.Length; i++)
                 {
-                    if (entityManager.HasComponent<EnemyTag>(result[i].Entity) && result[i].Entity != entity)
+                    if (Enemies.HasComponent(result[i].Entity) && result[i].Entity != entity)
                     {
-                       
-                            // Get the LocalTransform component from the target entity
-                        
-                            // var targetLookup = SystemAPI.GetComponentLookup<LocalTransform>();
-                            // var targetLookup = SystemAPI.GetComponent<LocalTransform>(result[i].Entity); 
-                            // var entityTransform = targetLookup.GetRefRO(result[i].Entity);
-                            // Debug.Log(targetLookup.Position);
-                            // var targetTransform = entityManager.GetComponentData<LocalTransform>(result[i].Entity);
-                            // Debug.Log(targetTransform.Position);
-
-                            // Use the LocalTransform data from the target entity in your job
-                            // ...
-                        
-                        // var collider = entityManager.GetComponentData<LocalTransform>(result[i].Entity);
-                                
-                        // Debug.Log(collider.Position);
-                        Vector3 separationDirection = (localTransform.Position - result[i].Position);
+                        Vector3 separationDirection = localTransform.Position - EntityPositions.GetRefRO(result[i].Entity).ValueRO.Position;
                         separationDirection = separationDirection.normalized;
                         separationDirection.y = 0f;
                         localTransform.Position += new float3(separationDirection * separationForce * deltaTime);
                     }
                 }
             }
-
             result.Dispose();
-
-
-
-            // foreach (Collider collider in colliders) {
-            //     if (collider.gameObject.CompareTag("MeeleEnemy") && collider.gameObject != gameObject) { //Todo --> change the default tag when more enemies are added
-            //         Vector3 separationDirection = (transform.position - collider.transform.position).normalized;
-            //         separationDirection.y = 0f;
-            //         transform.position += separationDirection * separationForce * Time.deltaTime;
-            //     }
-            // }
         }
     }
 }

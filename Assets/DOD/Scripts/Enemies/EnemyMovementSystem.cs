@@ -46,7 +46,6 @@ public partial struct EnemyMovementSystem : ISystem
         state.Dependency = enemySeparationJob.ScheduleParallel(state.Dependency);
         state.Dependency.Complete();
         
-        //todo --> maybe change this so that it does not iterate over all the entities
         var destroyEnemyJob = new DestroyEnemyJob
         {
             ECB = ecb.AsParallelWriter()
@@ -113,10 +112,7 @@ public partial struct EnemyMovementSystem : ISystem
     
         void Execute([ChunkIndexInQuery] int chunkIndex,in Entity entity)
         {
-            // if (health.value <=0)
-            // {
                 ECB.DestroyEntity(chunkIndex,entity);
-            // }
         }
     }
 }

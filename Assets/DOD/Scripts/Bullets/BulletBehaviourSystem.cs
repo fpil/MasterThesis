@@ -14,13 +14,8 @@ namespace DOD.Scripts.Bullets
     [UpdateAfter(typeof(BulletSpawnSystem))]
     public partial struct BulletBehaviourSystem : ISystem
     {
-        // private SystemHandle buildPhysicsWorldSystem;
-        // private SystemHandle commandBufferSystem;
-
         public void OnCreate(ref SystemState state)
         {
-            // buildPhysicsWorldSystem = state.World.GetOrCreateSystem<BuildPhysicsWorld>(); 
-            // commandBufferSystem = state.World.GetOrCreateSystem<EndSimulationEntityCommandBufferSystem>();
         }
 
         public void OnDestroy(ref SystemState state)
@@ -51,7 +46,6 @@ namespace DOD.Scripts.Bullets
                 Healths = SystemAPI.GetComponentLookup<HealthComponent>(true),
                 ECB = ecb.AsParallelWriter()
             };
-            // bulletCollisionJob.Run(); //Cannot be parallel because the entity manger is used 
             state.Dependency = bulletCollisionJob.ScheduleParallel(state.Dependency);
             state.Dependency.Complete();
             
@@ -103,7 +97,6 @@ namespace DOD.Scripts.Bullets
                 };
                 
                 // Debug.DrawLine(raycastInput.Start, raycastInput.End, Color.green, 0.1f);
-                
                 RaycastHit hit = new RaycastHit();
                 if (world.CastRay(rayCastInput, out hit))
                 {
@@ -123,7 +116,6 @@ namespace DOD.Scripts.Bullets
                                     value = currentHealth.value -= 5
                                 } );
                             }
-                            
                         }
                         //Destroy bullet if it collides with something
                         lifeTime.currentLifeTime = 2; // todo --> maybe too much a hack

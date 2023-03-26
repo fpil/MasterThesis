@@ -31,23 +31,17 @@ public partial struct EnemyBehaviorSystem : ISystem
         var ecbSingleton = SystemAPI.GetSingleton<BeginSimulationEntityCommandBufferSystem.Singleton>();
         EntityCommandBuffer ecb = ecbSingleton.CreateCommandBuffer(state.WorldUnmanaged);
 
-        var moveTowardPlayerJob = new MoveTowardPlayerJob
+        var moveTowardPlayerJob = new MoveAndSeparateEnemiesJob
         {
             PlayerTransform = playerTransform,
-            deltaTime = deltaTime
-        };
-        state.Dependency = moveTowardPlayerJob.ScheduleParallel(state.Dependency);
-        state.Dependency.Complete();
-
-        var enemySeparationJob = new EnemySeparationJob
-        {
             deltaTime = deltaTime,
             world = collisionWorld,
             EntityPositions = SystemAPI.GetComponentLookup<LocalToWorld>(true), //Possibly Expensive
             Enemies = SystemAPI.GetComponentLookup<EnemyTag>(true) //Possibly Expensive
         };
-        state.Dependency = enemySeparationJob.ScheduleParallel(state.Dependency);
+        state.Dependency = moveTowardPlayerJob.ScheduleParallel(state.Dependency);
         state.Dependency.Complete();
+        
         
         var destroyEnemyJob = new DestroyEnemyJob
         {
@@ -67,36 +61,27 @@ public partial struct EnemyBehaviorSystem : ISystem
     
     [BurstCompile]
     [WithAll(typeof(EnemyTag))]
-    public partial struct MoveTowardPlayerJob : IJobEntity
+    public partial struct MoveAndSeparateEnemiesJob : IJobEntity
     {
         public LocalTransform PlayerTransform { get; set; }
         public float deltaTime;
-        void Execute(ref LocalTransform localTransform)
+        [field: ReadOnly] public CollisionWorld world { get; set; }
+        [ReadOnly] 
+        public ComponentLookup<LocalToWorld> EntityPositions; //Expensive 
+        [ReadOnly]
+        public ComponentLookup<EnemyTag> Enemies; //Expensive only used to check if hit entity has tag todo --> fix
+        
+        private const float separationRadius = 1f;
+        private const float separationForce = 1f;
+        void Execute(in Entity entity, ref LocalTransform localTransform)
         {
             Vector3 direction = PlayerTransform.Position - localTransform.Position;
             direction = direction.normalized;
             localTransform.Position += new float3(direction * 3 * deltaTime); //Todo --> adjust the speed to be specific to the enemy
             localTransform.Rotation = Quaternion.LookRotation(direction);
-        }
-    }
-
-    [BurstCompile]
-    [WithAll(typeof(EnemyTag))]
-    public partial struct EnemySeparationJob : IJobEntity
-    {
-        public float deltaTime;
-        [field: ReadOnly] public CollisionWorld world { get; set; }
-        [ReadOnly] 
-        public ComponentLookup<LocalToWorld> EntityPositions;
-        [ReadOnly]
-        public ComponentLookup<EnemyTag> Enemies;
-        
-        private const float separationRadius = 1f;
-        private const float separationForce = 1f;
-
-        //Todo --> this is slowing down the application = Expensive script
-        void Execute(in Entity entity, ref LocalTransform localTransform)
-        {
+            
+            
+            // Separation
             var result = new NativeList<DistanceHit>(Allocator.TempJob);
             if (world.OverlapSphere(localTransform.Position, separationRadius, ref result, CollisionFilter.Default))
             {
@@ -105,6 +90,7 @@ public partial struct EnemyBehaviorSystem : ISystem
                     if (Enemies.HasComponent(result[i].Entity) && result[i].Entity != entity)
                     {
                         Vector3 separationDirection = localTransform.Position - EntityPositions.GetRefRO(result[i].Entity).ValueRO.Position;
+                        // Vector3 separationDirection = localTransform.Position - result[i].Position;
                         separationDirection = separationDirection.normalized;
                         separationDirection.y = 0f;
                         localTransform.Position += new float3(separationDirection * separationForce * deltaTime);
@@ -114,6 +100,7 @@ public partial struct EnemyBehaviorSystem : ISystem
             result.Dispose();
         }
     }
+    
     
     [UpdateAfter(typeof(BulletBehaviourSystem.BulletCollisionJob))]
     [BurstCompile]

@@ -5,7 +5,7 @@ using UnityEngine;
 using Random = Unity.Mathematics.Random;
 
 
-public partial struct EnemySpawnerSystem : ISystem
+public partial struct EnemyBehaviorSystem : ISystem
 {
     private Random generator;
 
@@ -27,7 +27,7 @@ public partial struct EnemySpawnerSystem : ISystem
         var spawnEnemyJob = new SpawnEnemyJob
         {
             Ecb = ecb,
-            generator = generator,
+            generator = generator
         };
         spawnEnemyJob.Run();
         //Disables the system update

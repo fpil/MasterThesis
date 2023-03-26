@@ -28,7 +28,7 @@ public partial struct EnemyMovementSystem : ISystem
         var ecbSingleton = SystemAPI.GetSingleton<BeginSimulationEntityCommandBufferSystem.Singleton>();
         EntityCommandBuffer ecb = ecbSingleton.CreateCommandBuffer(state.WorldUnmanaged);
 
-        var moveTowardPlayerJob = new MoveTowardPlayerJob()
+        var moveTowardPlayerJob = new MoveTowardPlayerJob
         {
             PlayerTransform = playerTransform,
             deltaTime = deltaTime
@@ -36,7 +36,7 @@ public partial struct EnemyMovementSystem : ISystem
         state.Dependency = moveTowardPlayerJob.ScheduleParallel(state.Dependency);
         state.Dependency.Complete();
 
-        var enemySeparationJob = new EnemySeparationJob()
+        var enemySeparationJob = new EnemySeparationJob
         {
             deltaTime = deltaTime,
             world = collisionWorld,
@@ -83,6 +83,7 @@ public partial struct EnemyMovementSystem : ISystem
         private const float separationRadius = 1f;
         private const float separationForce = 1f;
 
+        //Todo --> this is slowing down the application = Expensive script
         void Execute(in Entity entity, ref LocalTransform localTransform)
         {
             var result = new NativeList<DistanceHit>(Allocator.TempJob);

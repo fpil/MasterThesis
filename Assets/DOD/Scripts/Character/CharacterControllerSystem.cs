@@ -25,14 +25,15 @@ public partial struct CharacterControllerSystem : ISystem
         var movement = new float3(Input.GetAxis("Horizontal"), 0, Input.GetAxis("Vertical"));
         var cameraTransform = Camera.main.transform.rotation; 
         
-        var playerCharacterMoveJob = new PlayerCharacterMoveJob()
+        var playerCharacterMoveJob = new PlayerCharacterMoveJob
         {
             cameraTransform = cameraTransform,
             movement = movement,
-            deltaTime = deltaTime, 
+            deltaTime = deltaTime 
         };
-        playerCharacterMoveJob.Run(); //main thread
-        // state.Dependency = playerCharacterMoveJob.ScheduleParallel(state.Dependency);
+        // playerCharacterMoveJob.Run(); //main thread
+        state.Dependency = playerCharacterMoveJob.ScheduleParallel(state.Dependency);
+        state.Dependency.Complete();
 
     }
     [WithAll(typeof(PlayerTagComponent))]
@@ -40,16 +41,17 @@ public partial struct CharacterControllerSystem : ISystem
     public partial struct PlayerCharacterMoveJob : IJobEntity
     {
         public Quaternion cameraTransform; 
-        //todo --> make new script for updating the rotation
         public float3 movement;
         public float deltaTime;
         public void Execute(ref LocalTransform transform)
         {
             //Set the rotation of the character to the camera rotation
-            transform.Rotation = cameraTransform;
-            transform.Rotation.value.x = 0;
-            transform.Rotation.value.z = 0;
-
+            Quaternion playerTransformRotation = cameraTransform;
+            playerTransformRotation.x = 0;
+            playerTransformRotation.z = 0;
+            
+            //Smoothness
+            transform.Rotation = Quaternion.Lerp(transform.Rotation, playerTransformRotation, 0.1f);
             //Move the character towards its orientation
             float3 rotatedDirection = math.rotate(transform.Rotation, movement);
             rotatedDirection.y = 0;

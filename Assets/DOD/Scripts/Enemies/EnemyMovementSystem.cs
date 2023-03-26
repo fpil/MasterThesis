@@ -1,3 +1,4 @@
+using DOD.Scripts.Bullets;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
@@ -24,6 +25,8 @@ public partial struct EnemyMovementSystem : ISystem
         LocalTransform playerTransform = state.EntityManager.GetComponentData<LocalTransform>(playerEntity);
         var deltaTime = state.WorldUnmanaged.Time.DeltaTime;
         var collisionWorld = SystemAPI.GetSingleton<PhysicsWorldSingleton>().CollisionWorld;
+        var ecbSingleton = SystemAPI.GetSingleton<BeginSimulationEntityCommandBufferSystem.Singleton>();
+        EntityCommandBuffer ecb = ecbSingleton.CreateCommandBuffer(state.WorldUnmanaged);
 
         var moveTowardPlayerJob = new MoveTowardPlayerJob()
         {
@@ -41,6 +44,14 @@ public partial struct EnemyMovementSystem : ISystem
             Enemies = SystemAPI.GetComponentLookup<EnemyTag>(true) //Possibly Expensive
         };
         state.Dependency = enemySeparationJob.ScheduleParallel(state.Dependency);
+        state.Dependency.Complete();
+        
+        //todo --> maybe change this so that it does not iterate over all the entities
+        var destroyEnemyJob = new DestroyEnemyJob
+        {
+            ECB = ecb.AsParallelWriter()
+        };
+        state.Dependency = destroyEnemyJob.ScheduleParallel(state.Dependency);
         state.Dependency.Complete();
     }
     
@@ -69,11 +80,12 @@ public partial struct EnemyMovementSystem : ISystem
         public ComponentLookup<LocalToWorld> EntityPositions;
         [ReadOnly]
         public ComponentLookup<EnemyTag> Enemies;
+        
+        private const float separationRadius = 1f;
+        private const float separationForce = 1f;
 
         void Execute(in Entity entity, ref LocalTransform localTransform)
         {
-            float separationRadius = 1f;
-            float separationForce = 1f;
             var result = new NativeList<DistanceHit>(Allocator.TempJob);
             if (world.OverlapSphere(localTransform.Position, separationRadius, ref result, CollisionFilter.Default))
             {
@@ -89,6 +101,22 @@ public partial struct EnemyMovementSystem : ISystem
                 }
             }
             result.Dispose();
+        }
+    }
+    
+    [UpdateAfter(typeof(BulletBehaviourSystem.BulletCollisionJob))]
+    [BurstCompile]
+    [WithAll(typeof(IsDeadComponent))]
+    public partial struct DestroyEnemyJob : IJobEntity
+    {
+        public EntityCommandBuffer.ParallelWriter ECB;
+    
+        void Execute([ChunkIndexInQuery] int chunkIndex,in Entity entity)
+        {
+            // if (health.value <=0)
+            // {
+                ECB.DestroyEntity(chunkIndex,entity);
+            // }
         }
     }
 }

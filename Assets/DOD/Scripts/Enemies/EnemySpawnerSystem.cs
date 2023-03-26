@@ -51,6 +51,13 @@ public partial struct EnemySpawnerSystem : ISystem
                 var enemyTransForm = LocalTransform.FromPosition(spawnPosition);
                 Ecb.SetComponent(instance,enemyTransForm);
                 Ecb.AddComponent(instance, new EnemyTag());
+                Ecb.AddComponent(instance, new HealthComponent
+                {
+                    value = 10
+                });
+                // Ecb.AddComponent(instance,  typeof(IsDeadComponent));
+                Ecb.AddComponent<IsDeadComponent>(instance);
+                Ecb.SetComponentEnabled(instance,typeof(IsDeadComponent), false);
                 //Add more components 
             }
         }

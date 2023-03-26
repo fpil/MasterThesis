@@ -36,7 +36,7 @@ namespace DOD.Scripts.Bullets
             var muzzleGameObject = GameObject.Find("MuzzleGameObject"); //this is not a good approach to ref the position like this
             var vector3 = muzzleGameObject.transform.forward;
 
-            var updateBulletPositionJob = new UpdateBulletPositionJob()
+            var updateBulletPositionJob = new UpdateBulletPositionJob
             {
                 deltaTime = deltaTime,
                 vector3 = vector3,
@@ -44,12 +44,15 @@ namespace DOD.Scripts.Bullets
             state.Dependency = updateBulletPositionJob.ScheduleParallel(state.Dependency);
             state.Dependency.Complete();
 
-            var bulletCollisionJob = new BulletCollisionJob()
+            var bulletCollisionJob = new BulletCollisionJob
             {
                 world = collisionWorld,
-                entityManager = state.World.EntityManager
+                Enemies = SystemAPI.GetComponentLookup<EnemyTag>(true),
+                Healths = SystemAPI.GetComponentLookup<HealthComponent>(true),
+                ECB = ecb.AsParallelWriter()
             };
-            bulletCollisionJob.Run(); //Cannot be parallel because the entity manger is used // todo --> fix
+            // bulletCollisionJob.Run(); //Cannot be parallel because the entity manger is used 
+            state.Dependency = bulletCollisionJob.ScheduleParallel(state.Dependency);
             state.Dependency.Complete();
             
             var destroyBulletJob = new DestroyBulletJob()
@@ -65,7 +68,6 @@ namespace DOD.Scripts.Bullets
         {
             public float deltaTime;
             public Vector3 vector3 { get; set; }
-            // public EntityCommandBuffer Ecb;
             public void Execute(ref LocalTransform localTransform, ref BulletFired fired, ref BulletLifeTime lifeTime)
             {
                 //Saves the original fire direction
@@ -73,9 +75,6 @@ namespace DOD.Scripts.Bullets
                 {
                     fired._hasFired = 1;
                     fired.fireDirection = vector3;
-
-                    //This is expensive structural change
-                    // Ecb.RemoveComponent<BulletFired>(entity);
                 }
                 //Update position of the bullet
                 localTransform.Position += fired.fireDirection * 100 * deltaTime; //todo --> change the speed parameter to be bullet dependent 
@@ -88,11 +87,15 @@ namespace DOD.Scripts.Bullets
         public partial struct BulletCollisionJob : IJobEntity
         {
             [field: ReadOnly] public CollisionWorld world { get; set; }
-            public EntityManager entityManager;
+            [ReadOnly]
+            public ComponentLookup<HealthComponent> Healths;
+            [ReadOnly]
+            public ComponentLookup<EnemyTag> Enemies;
+            public EntityCommandBuffer.ParallelWriter ECB;
 
-            public void Execute(in Entity entity, in LocalTransform localTransform, in BulletFired fired, ref BulletLifeTime lifeTime)
+            public void Execute([ChunkIndexInQuery] int chunkIndex, in Entity entity, in LocalTransform localTransform, in BulletFired fired, ref BulletLifeTime lifeTime)
             {
-                var raycastInput = new RaycastInput
+                var rayCastInput = new RaycastInput
                 {
                     Start = localTransform.Position,
                     End = localTransform.Position+fired.fireDirection,
@@ -102,14 +105,25 @@ namespace DOD.Scripts.Bullets
                 // Debug.DrawLine(raycastInput.Start, raycastInput.End, Color.green, 0.1f);
                 
                 RaycastHit hit = new RaycastHit();
-                if (world.CastRay(raycastInput, out hit))
+                if (world.CastRay(rayCastInput, out hit))
                 {
                     if (hit.Entity != entity)
                     {
-                        if (entityManager.HasComponent<MeleeEnemyTag>(hit.Entity))
+                        if (Enemies.HasComponent(hit.Entity))
                         {
-                            //todo --> deal damage to enemy
-                            Debug.Log(hit.Entity);
+                            var currentHealth = Healths.GetRefRO(hit.Entity).ValueRO;
+                            if (currentHealth.value-5 <=0) //Small trick to get the correct value after hit without ref again
+                            {
+                                ECB.SetComponentEnabled<IsDeadComponent>(chunkIndex, hit.Entity,true);
+                            }
+                            else
+                            {
+                                ECB.SetComponent(chunkIndex, hit.Entity, new HealthComponent
+                                {
+                                    value = currentHealth.value -= 5
+                                } );
+                            }
+                            
                         }
                         //Destroy bullet if it collides with something
                         lifeTime.currentLifeTime = 2; // todo --> maybe too much a hack

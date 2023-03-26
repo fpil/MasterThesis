@@ -5,7 +5,7 @@ using UnityEngine;
 using Random = Unity.Mathematics.Random;
 
 
-public partial struct EnemyBehaviorSystem : ISystem
+public partial struct EnemySpawnerSystem : ISystem
 {
     private Random generator;
 

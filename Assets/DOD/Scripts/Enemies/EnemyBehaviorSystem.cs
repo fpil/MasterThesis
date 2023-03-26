@@ -1,4 +1,5 @@
 using DOD.Scripts.Bullets;
+using DOD.Scripts.Enemies;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
@@ -6,8 +7,10 @@ using Unity.Mathematics;
 using Unity.Physics;
 using Unity.Transforms;
 using UnityEngine;
+using RaycastHit = Unity.Physics.RaycastHit;
 
-public partial struct EnemyMovementSystem : ISystem
+
+public partial struct EnemyBehaviorSystem : ISystem
 {
     private EntityQuery playerQuery;
     public void OnCreate(ref SystemState state)
@@ -51,6 +54,14 @@ public partial struct EnemyMovementSystem : ISystem
             ECB = ecb.AsParallelWriter()
         };
         state.Dependency = destroyEnemyJob.ScheduleParallel(state.Dependency);
+        state.Dependency.Complete();
+        
+        var meleeAttackJob = new MeleeAttackJob
+        {
+            world = collisionWorld, 
+            Player = SystemAPI.GetComponentLookup<PlayerTagComponent>(true)
+        };
+        state.Dependency = meleeAttackJob.ScheduleParallel(state.Dependency);
         state.Dependency.Complete();
     }
     
@@ -114,6 +125,39 @@ public partial struct EnemyMovementSystem : ISystem
         void Execute([ChunkIndexInQuery] int chunkIndex,in Entity entity)
         {
                 ECB.DestroyEntity(chunkIndex,entity);
+        }
+    }
+    
+    
+    //This is slow //todo --> fix 
+    [BurstCompile]
+    [WithAll(typeof(MeleeEnemyTag))]
+    public partial struct MeleeAttackJob : IJobEntity
+    {
+        [field: ReadOnly] public CollisionWorld world { get; set; }
+        [ReadOnly]
+        public ComponentLookup<PlayerTagComponent> Player;
+
+        void Execute(in Entity entity, in LocalTransform localTransform)
+        {
+            var rayCastInput = new RaycastInput
+            {
+                Start = localTransform.Position + localTransform.Forward(),
+                End = localTransform.Position + (localTransform.Forward()*1.5f),
+                Filter = CollisionFilter.Default
+            };
+            
+            RaycastHit hit = new RaycastHit();
+            if (world.CastRay(rayCastInput, out hit))
+            {
+                if (hit.Entity != entity)
+                {
+                    if (Player.HasComponent(hit.Entity))
+                    {
+                        Debug.Log("Attack player");
+                    }
+                }
+            }
         }
     }
 }

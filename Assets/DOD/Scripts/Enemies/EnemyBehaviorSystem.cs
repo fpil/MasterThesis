@@ -1,3 +1,4 @@
+using Assets.DOD.Scripts.Enemies;
 using DOD.Scripts.Bullets;
 using DOD.Scripts.Enemies;
 using Unity.Burst;
@@ -52,7 +53,8 @@ public partial struct EnemyBehaviorSystem : ISystem
         
         var meleeAttackJob = new MeleeAttackJob
         {
-            PlayerTransform = playerTransform
+            PlayerTransform = playerTransform, 
+            deltaTime = deltaTime
         };
         state.Dependency = meleeAttackJob.ScheduleParallel(state.Dependency);
         state.Dependency.Complete();
@@ -117,14 +119,19 @@ public partial struct EnemyBehaviorSystem : ISystem
     [WithAll(typeof(MeleeEnemyTag))]
     public partial struct MeleeAttackJob : IJobEntity
     {
+        public float deltaTime;
         public LocalTransform PlayerTransform { get; set; }
-        void Execute(in LocalTransform localTransform)
+        void Execute(in LocalTransform localTransform, ref AttackComponent attack, in MeleeAttackSettingsComponent attackSettings)
         {
-            float distance = Vector3.Distance(PlayerTransform.Position, localTransform.Position);
-            if (distance <= 1.5f)
+            attack.LastAttackTime += deltaTime;
+            if (attack.LastAttackTime > attackSettings.MaxTimer)
             {
-                Debug.Log("ATTACK");
-                // lastAttackTime = Time.time; // update lastAttackTime to the current time
+                float distance = Vector3.Distance(PlayerTransform.Position, localTransform.Position);
+                if (distance <= attackSettings.Range)
+                {
+                    Debug.Log("Attack");
+                    attack.LastAttackTime = 0;
+                }
             }
         }
     }

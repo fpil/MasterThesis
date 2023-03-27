@@ -33,8 +33,7 @@ namespace Assets.DOD.Scripts.Enemies
     public struct EnemySpawnSettings : IComponentData
     {
         public int Amount;
-
-        public float3 SpawnPosition; 
+        public float3 SpawnPosition;
         //todo --> add type parameter to define the type of enemy to be spawned 
     }
 }

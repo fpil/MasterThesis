@@ -58,6 +58,13 @@ public partial struct EnemySpawnerSystem : ISystem
                 // Ecb.AddComponent(instance,  typeof(IsDeadComponent));
                 Ecb.AddComponent<IsDeadComponent>(instance);
                 Ecb.SetComponentEnabled(instance,typeof(IsDeadComponent), false);
+                Ecb.AddComponent(instance, new AttackComponent());
+                Ecb.AddSharedComponent(instance, new MeleeAttackSettingsComponent
+                {
+                    Range = 1.5f, 
+                    MaxTimer = 1f
+                });
+
                 //Add more components 
             }
         }

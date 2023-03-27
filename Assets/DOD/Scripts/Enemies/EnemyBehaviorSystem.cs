@@ -40,7 +40,7 @@ public partial struct EnemyBehaviorSystem : ISystem
             Enemies = SystemAPI.GetComponentLookup<EnemyTag>(true) //Possibly Expensive
         };
         state.Dependency = moveTowardPlayerJob.ScheduleParallel(state.Dependency);
-        state.Dependency.Complete();
+        // state.Dependency.Complete();
         
         
         var destroyEnemyJob = new DestroyEnemyJob
@@ -48,12 +48,11 @@ public partial struct EnemyBehaviorSystem : ISystem
             ECB = ecb.AsParallelWriter()
         };
         state.Dependency = destroyEnemyJob.ScheduleParallel(state.Dependency);
-        state.Dependency.Complete();
+        // state.Dependency.Complete();
         
         var meleeAttackJob = new MeleeAttackJob
         {
-            world = collisionWorld, 
-            Player = SystemAPI.GetComponentLookup<PlayerTagComponent>(true)
+            PlayerTransform = playerTransform
         };
         state.Dependency = meleeAttackJob.ScheduleParallel(state.Dependency);
         state.Dependency.Complete();
@@ -100,8 +99,7 @@ public partial struct EnemyBehaviorSystem : ISystem
             result.Dispose();
         }
     }
-    
-    
+
     [UpdateAfter(typeof(BulletBehaviourSystem.BulletCollisionJob))]
     [BurstCompile]
     [WithAll(typeof(IsDeadComponent))]
@@ -115,35 +113,18 @@ public partial struct EnemyBehaviorSystem : ISystem
         }
     }
     
-    
-    //This is slow //todo --> fix 
     [BurstCompile]
     [WithAll(typeof(MeleeEnemyTag))]
     public partial struct MeleeAttackJob : IJobEntity
     {
-        [field: ReadOnly] public CollisionWorld world { get; set; }
-        [ReadOnly]
-        public ComponentLookup<PlayerTagComponent> Player;
-
-        void Execute(in Entity entity, in LocalTransform localTransform)
+        public LocalTransform PlayerTransform { get; set; }
+        void Execute(in LocalTransform localTransform)
         {
-            var rayCastInput = new RaycastInput
+            float distance = Vector3.Distance(PlayerTransform.Position, localTransform.Position);
+            if (distance <= 1.5f)
             {
-                Start = localTransform.Position + localTransform.Forward(),
-                End = localTransform.Position + (localTransform.Forward()*1.5f),
-                Filter = CollisionFilter.Default
-            };
-            
-            RaycastHit hit = new RaycastHit();
-            if (world.CastRay(rayCastInput, out hit))
-            {
-                if (hit.Entity != entity)
-                {
-                    if (Player.HasComponent(hit.Entity))
-                    {
-                        Debug.Log("Attack player");
-                    }
-                }
+                Debug.Log("ATTACK");
+                // lastAttackTime = Time.time; // update lastAttackTime to the current time
             }
         }
     }

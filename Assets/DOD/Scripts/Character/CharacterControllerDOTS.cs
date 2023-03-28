@@ -12,11 +12,6 @@ public class CharacterControllerDOTS : MonoBehaviour
 public struct PlayerTagComponent : IComponentData
 {
 }
-public struct SpeedComponent : IComponentData
-{
-   public float Value;
-}
-
 
 public class PlayerCharacterBaker : Baker<CharacterControllerDOTS>
 {

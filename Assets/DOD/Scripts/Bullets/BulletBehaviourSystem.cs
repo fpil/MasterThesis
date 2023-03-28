@@ -59,7 +59,7 @@ namespace DOD.Scripts.Bullets
         {
             public float deltaTime;
             public Vector3 vector3 { get; set; }
-            public void Execute(ref LocalTransform localTransform, ref BulletFired fired, ref BulletLifeTime lifeTime)
+            public void Execute(ref LocalTransform localTransform, ref BulletFired fired, ref BulletLifeTime lifeTime, in SpeedComponent speedComponent)
             {
                 //Saves the original fire direction
                 if (fired._hasFired == 0)
@@ -68,7 +68,7 @@ namespace DOD.Scripts.Bullets
                     fired.fireDirection = vector3;
                 }
                 //Update position of the bullet
-                localTransform.Position += fired.fireDirection * 100 * deltaTime; //todo --> change the speed parameter to be bullet dependent 
+                localTransform.Position += fired.fireDirection * speedComponent.Value * deltaTime; 
                 lifeTime.currentLifeTime += deltaTime;
             }
         }

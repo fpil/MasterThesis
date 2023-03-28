@@ -24,7 +24,7 @@ MonoBehaviour:
   m_MinSize: {x: 300, y: 100}
   m_MaxSize: {x: 24288, y: 16192}
   vertical: 0
-  controlID: 90032
+  controlID: 91962
 --- !u!114 &2
 MonoBehaviour:
   m_ObjectHideFlags: 52
@@ -147,7 +147,7 @@ MonoBehaviour:
   m_MinSize: {x: 200, y: 100}
   m_MaxSize: {x: 16192, y: 16192}
   vertical: 1
-  controlID: 89998
+  controlID: 91963
 --- !u!114 &4
 MonoBehaviour:
   m_ObjectHideFlags: 52
@@ -172,7 +172,7 @@ MonoBehaviour:
   m_MinSize: {x: 200, y: 50}
   m_MaxSize: {x: 16192, y: 8096}
   vertical: 0
-  controlID: 89947
+  controlID: 91919
 --- !u!114 &5
 MonoBehaviour:
   m_ObjectHideFlags: 52
@@ -1595,7 +1595,7 @@ MonoBehaviour:
   m_MinSize: {x: 200, y: 50}
   m_MaxSize: {x: 16192, y: 8096}
   vertical: 0
-  controlID: 89999
+  controlID: 91964
 --- !u!114 &11
 MonoBehaviour:
   m_ObjectHideFlags: 52
@@ -1615,8 +1615,8 @@ MonoBehaviour:
     y: 0
     width: 748
     height: 383
-  m_MinSize: {x: 100, y: 100}
-  m_MaxSize: {x: 4000, y: 4000}
+  m_MinSize: {x: 101, y: 121}
+  m_MaxSize: {x: 4001, y: 4021}
   m_ActualView: {fileID: 13}
   m_Panes:
   - {fileID: 12}
@@ -1670,22 +1670,22 @@ MonoBehaviour:
     m_SkipHidden: 0
     m_SearchArea: 1
     m_Folders:
-    - Assets/DOD/Scripts/Shared Components
+    - Assets/DOD/Scripts/Character
     m_Globs: []
     m_OriginalText: 
     m_ImportLogFlags: 0
   m_ViewMode: 1
   m_StartGridSize: 16
   m_LastFolders:
-  - Assets/DOD/Scripts/Shared Components
+  - Assets/DOD/Scripts/Character
   m_LastFoldersGridSize: 16
   m_LastProjectPath: C:\Users\pilfr\Desktop\MasterThesis
   m_LockTracker:
     m_IsLocked: 0
   m_FolderTreeState:
     scrollPos: {x: 0, y: 0}
-    m_SelectedIDs: 4c7f0100
-    m_LastClickedID: 98124
+    m_SelectedIDs: f0800000
+    m_LastClickedID: 33008
     m_ExpandedIDs: 0000000096800000988000009a8000009c80000000ca9a3b
     m_RenameOverlay:
       m_UserAcceptedRename: 0
@@ -1739,8 +1739,8 @@ MonoBehaviour:
       m_Icon: {fileID: 0}
       m_ResourceFile: 
   m_ListAreaState:
-    m_SelectedInstanceIDs: 
-    m_LastClickedInstanceID: 0
+    m_SelectedInstanceIDs: 56160000
+    m_LastClickedInstanceID: 5718
     m_HadKeyboardFocusLastEvent: 0
     m_ExpandedInstanceIDs: c6230000
     m_RenameOverlay:
@@ -1854,7 +1854,7 @@ MonoBehaviour:
   m_MinSize: {x: 100, y: 100}
   m_MaxSize: {x: 8096, y: 16192}
   vertical: 1
-  controlID: 90033
+  controlID: 91990
 --- !u!114 &16
 MonoBehaviour:
   m_ObjectHideFlags: 52
@@ -1967,9 +1967,9 @@ MonoBehaviour:
     width: 453
     height: 641
   m_SerializedDataModeController:
-    m_DataMode: 1
-    m_PreferredDataMode: 1
-    m_SupportedDataModes: 010000000200000003000000
+    m_DataMode: 0
+    m_PreferredDataMode: 0
+    m_SupportedDataModes: 
     isAutomatic: 1
   m_ViewDataDictionary: {fileID: 0}
   m_OverlayCanvas:
@@ -1981,7 +1981,7 @@ MonoBehaviour:
     m_CachedPref: 330
     m_ControlHash: -371814159
     m_PrefName: Preview_InspectorPreview
-  m_LastInspectedObjectInstanceID: -2231934
+  m_LastInspectedObjectInstanceID: 5718
   m_LastVerticalScrollValue: 0
   m_GlobalObjectId: 
   m_InspectorMode: 0

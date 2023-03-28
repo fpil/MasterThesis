@@ -55,7 +55,6 @@ public partial struct EnemySpawnerSystem : ISystem
                 {
                     value = 10
                 });
-                // Ecb.AddComponent(instance,  typeof(IsDeadComponent));
                 Ecb.AddComponent<IsDeadComponent>(instance);
                 Ecb.SetComponentEnabled(instance,typeof(IsDeadComponent), false);
                 Ecb.AddComponent(instance, new AttackComponent());
@@ -64,9 +63,7 @@ public partial struct EnemySpawnerSystem : ISystem
                     Range = 1.5f, 
                     MaxTimer = 1f
                 });
-
-                //Add more components 
-            }
+         }
         }
     }
 }

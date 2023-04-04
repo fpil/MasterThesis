@@ -57,6 +57,8 @@ public partial struct BulletSpawnSystem : ISystem
             {
                 Value = 10
             });
+            Ecb.AddComponent<IsDeadComponent>(instance);
+            Ecb.SetComponentEnabled(instance,typeof(IsDeadComponent), false);
         }
     }
 }

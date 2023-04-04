@@ -32,6 +32,8 @@ namespace DOD.Scripts.Bullets
             {
                 deltaTime = deltaTime,
                 vector3 = vector3,
+                // ECB = ecb.AsParallelWriter()
+
             };    
             state.Dependency = updateBulletPositionJob.ScheduleParallel(state.Dependency);
             state.Dependency.Complete();
@@ -59,7 +61,9 @@ namespace DOD.Scripts.Bullets
         {
             public float deltaTime;
             public Vector3 vector3 { get; set; }
-            public void Execute(ref LocalTransform localTransform, ref BulletFired fired, ref BulletLifeTime lifeTime, in SpeedComponent speedComponent)
+            // public EntityCommandBuffer.ParallelWriter ECB { get; set; }
+
+            public void Execute([ChunkIndexInQuery] int chunkIndex, in Entity entity, ref LocalTransform localTransform, ref BulletFired fired, ref BulletLifeTime lifeTime, in SpeedComponent speedComponent)
             {
                 //Saves the original fire direction
                 if (fired._hasFired == 0)
@@ -70,6 +74,11 @@ namespace DOD.Scripts.Bullets
                 //Update position of the bullet
                 localTransform.Position += fired.fireDirection * speedComponent.Value * deltaTime; 
                 lifeTime.currentLifeTime += deltaTime;
+                
+                // if (lifeTime.currentLifeTime >= lifeTime.maxLifeTime)
+                // {
+                //     ECB.SetComponentEnabled<IsDeadComponent>(chunkIndex, entity,true);
+                // }
             }
         }
         
@@ -104,11 +113,11 @@ namespace DOD.Scripts.Bullets
                             var currentHealth = Healths.GetRefRO(hit.Entity).ValueRO;
                             if (currentHealth.value-5 <=0) //Small trick to get the correct value after hit without ref again
                             {
-                                ECB.SetComponentEnabled<IsDeadComponent>(chunkIndex, hit.Entity,true);
+                                ECB.SetComponentEnabled<IsDeadComponent>(hit.Entity.Index, hit.Entity,true);
                             }
                             else
                             {
-                                ECB.SetComponent(chunkIndex, hit.Entity, new HealthComponent
+                                ECB.SetComponent(hit.Entity.Index, hit.Entity, new HealthComponent
                                 {
                                     value = currentHealth.value -= 5
                                 } );
@@ -116,6 +125,7 @@ namespace DOD.Scripts.Bullets
                         }
                         //Destroy bullet if it collides with something
                         lifeTime.currentLifeTime = 2; // todo --> maybe too much a hack
+                        // ECB.SetComponentEnabled<IsDeadComponent>(chunkIndex, entity,true);
                     }
                 }
             }

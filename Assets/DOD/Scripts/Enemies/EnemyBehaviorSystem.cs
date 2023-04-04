@@ -74,7 +74,9 @@ public partial struct EnemyBehaviorSystem : ISystem
         var throwableParabolaJob = new ThrowableParabolaJob()
         {
             time = state.WorldUnmanaged.Time.ElapsedTime,
-            Ecb = ecb.AsParallelWriter()
+            Ecb = ecb.AsParallelWriter(),
+            world = collisionWorld,
+            Player = SystemAPI.GetComponentLookup<PlayerTagComponent>(true)
         };
         state.Dependency = throwableParabolaJob.ScheduleParallel(state.Dependency);
         state.Dependency.Complete();
@@ -198,6 +200,10 @@ public partial struct EnemyBehaviorSystem : ISystem
     public partial struct ThrowableParabolaJob : IJobEntity
     {
         public EntityCommandBuffer.ParallelWriter Ecb;
+        [field: ReadOnly] public CollisionWorld world { get; set; }
+        [ReadOnly]
+        public ComponentLookup<PlayerTagComponent> Player;
+
 
         public double time { get; set; }
 
@@ -218,7 +224,21 @@ public partial struct EnemyBehaviorSystem : ISystem
                 Ecb.SetComponentEnabled<IsDeadComponent>(chunkIndex, entity,true);
             }
             
-            //Todo --> add the collision check
+            //Collision check
+            float radius = .2f;
+            var result = new NativeList<DistanceHit>(Allocator.TempJob);
+            if (world.OverlapSphere(localTransform.Position, radius, ref result, CollisionFilter.Default))
+            {
+                for (int i = 0; i < result.Length; i++)
+                {
+                    if (Player.HasComponent(result[i].Entity))
+                    {
+                        Debug.Log("Hit");
+                        Ecb.SetComponentEnabled<IsDeadComponent>(chunkIndex, entity,true);
+                    }
+                }
+            }
+            result.Dispose();
         }
     }
 }

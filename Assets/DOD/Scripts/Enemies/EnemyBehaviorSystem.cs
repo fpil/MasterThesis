@@ -68,7 +68,7 @@ public partial struct EnemyBehaviorSystem : ISystem
 
         };
         // rangeAttackJob.Run();
-        state.Dependency = rangeAttackJob.Schedule(state.Dependency);
+        state.Dependency = rangeAttackJob.Schedule(state.Dependency); //cannot be parallel because of structural change
         state.Dependency.Complete();
         
         var throwableParabolaJob = new ThrowableParabolaJob()

@@ -46,3 +46,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   meleePrefab: {fileID: 7315762863330963977, guid: 93b4cefe2b908f240add5d9cf9ede1ad,
     type: 3}
+  rangePrefab: {fileID: 7315762863330963977, guid: 5023240a6b30b8449bed32654356ef68,
+    type: 3}
+  meleeAmount: 10
+  rangeAmount: 10

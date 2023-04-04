@@ -58,6 +58,27 @@ public partial struct EnemyBehaviorSystem : ISystem
         };
         state.Dependency = meleeAttackJob.ScheduleParallel(state.Dependency);
         state.Dependency.Complete();
+        
+        var rangeAttackJob = new RangeAttackJob
+        {
+            PlayerTransform = playerTransform, 
+            deltaTime = deltaTime, 
+            Ecb = ecb,
+            time = state.WorldUnmanaged.Time.ElapsedTime
+
+        };
+        // rangeAttackJob.Run();
+        state.Dependency = rangeAttackJob.Schedule(state.Dependency);
+        state.Dependency.Complete();
+        
+        var throwableParabolaJob = new ThrowableParabolaJob()
+        {
+            time = state.WorldUnmanaged.Time.ElapsedTime,
+            Ecb = ecb.AsParallelWriter()
+        };
+        state.Dependency = throwableParabolaJob.ScheduleParallel(state.Dependency);
+        state.Dependency.Complete();
+
     }
     
     [BurstCompile]
@@ -133,6 +154,71 @@ public partial struct EnemyBehaviorSystem : ISystem
                     attack.LastAttackTime = 0;
                 }
             }
+        }
+    }
+    [BurstCompile]
+    [WithAll(typeof(RangeEnemyTag))]
+    public partial struct RangeAttackJob : IJobEntity
+    {
+        public EntityCommandBuffer Ecb;
+
+        public float deltaTime;
+        public LocalTransform PlayerTransform { get; set; }
+        public double time { get; set; }
+
+        void Execute(in LocalTransform localTransform, ref AttackComponent attack, in RangeAttackSettingsComponent attackSettings, in ThrowableAspect throwableAspect)
+        {
+            attack.LastAttackTime += deltaTime;
+            if (attack.LastAttackTime > attackSettings.MaxTimer)
+            {
+                float distance = Vector3.Distance(PlayerTransform.Position, localTransform.Position);
+                if (distance <= attackSettings.Range)
+                {
+                    var instance = Ecb.Instantiate(throwableAspect.ThrowablePrefab);
+                    Ecb.SetComponent(instance, LocalTransform.FromPosition(localTransform.Position));
+                    Ecb.AddComponent<ThrowableTag>(instance);
+                    Ecb.AddComponent(instance, new ThrowableSettingsComponent
+                    {
+                        targetPos = PlayerTransform.Position, 
+                        startPos = localTransform.Position,
+                        distance = Vector3.Distance(localTransform.Position,PlayerTransform.Position),
+                        startTime = time, 
+                        terrainHeight = -1.52f,
+                        height = 2f
+                    });
+                    Ecb.AddComponent<IsDeadComponent>(instance);
+                    Ecb.SetComponentEnabled(instance,typeof(IsDeadComponent), false);
+                    attack.LastAttackTime = 0;
+                }
+            }
+        }
+    }
+    [BurstCompile]
+    [WithAll(typeof(ThrowableTag))]
+    public partial struct ThrowableParabolaJob : IJobEntity
+    {
+        public EntityCommandBuffer.ParallelWriter Ecb;
+
+        public double time { get; set; }
+
+        void Execute([ChunkIndexInQuery] int chunkIndex, in Entity entity, ref LocalTransform localTransform, in ThrowableSettingsComponent throwableSettingsComponent)
+        {
+            float distanceSoFar = ((float)time - (float)throwableSettingsComponent.startTime) * 5;
+            
+            float missingDistance = distanceSoFar / throwableSettingsComponent.distance;
+            
+            Vector3 currentPos = Vector3.Lerp(throwableSettingsComponent.startPos, throwableSettingsComponent.targetPos, missingDistance);
+            float parabolaHeight = throwableSettingsComponent.height * Mathf.Sin(missingDistance * Mathf.PI);
+            currentPos.y = Mathf.Max(Mathf.Lerp(throwableSettingsComponent.startPos.y, throwableSettingsComponent.targetPos.y, missingDistance) + parabolaHeight, throwableSettingsComponent.terrainHeight);
+            
+            localTransform.Position = currentPos;
+            
+            if (localTransform.Position.y <= throwableSettingsComponent.targetPos.y)
+            {
+                Ecb.SetComponentEnabled<IsDeadComponent>(chunkIndex, entity,true);
+            }
+            
+            //Todo --> add the collision check
         }
     }
 }

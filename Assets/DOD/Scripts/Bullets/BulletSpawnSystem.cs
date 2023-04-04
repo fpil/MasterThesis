@@ -1,4 +1,5 @@
 using DOD.Scripts.Bullets;
+using Unity.Burst;
 using Unity.Entities;
 using Unity.Transforms;
 using UnityEngine;
@@ -34,6 +35,7 @@ public partial struct BulletSpawnSystem : ISystem
         }
     }
 
+    [BurstCompile]
     public partial struct SpawnBulletJob : IJobEntity
     {
         public EntityCommandBuffer Ecb;

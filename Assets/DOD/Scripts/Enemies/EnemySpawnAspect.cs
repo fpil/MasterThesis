@@ -9,6 +9,8 @@ public readonly partial struct EnemySpawnAspect : IAspect
 
     // Note the use of ValueRO in the following properties.
     public Entity MeleePrefab => m_MeleeEnemy.ValueRO.MeleePrefab;
+    public Entity RangePrefab => m_MeleeEnemy.ValueRO.RangePrefab;
     public float3 SpawnPosition => m_SpawnSettings.ValueRO.SpawnPosition;
-    public int Amount => m_SpawnSettings.ValueRO.Amount;
+    public int MeleeAmount => m_SpawnSettings.ValueRO.MeleeAmount;
+    public int RangeAmount => m_SpawnSettings.ValueRO.RangeAmount;
 }

@@ -25,13 +25,11 @@ namespace DOD.Scripts.Bullets
             var ecbSingleton = SystemAPI.GetSingleton<BeginSimulationEntityCommandBufferSystem.Singleton>();
             EntityCommandBuffer ecb = ecbSingleton.CreateCommandBuffer(state.WorldUnmanaged);
             var collisionWorld = SystemAPI.GetSingleton<PhysicsWorldSingleton>().CollisionWorld;
-            var muzzleGameObject = GameObject.Find("MuzzleGameObject"); //this is not a good approach to ref the position like this
-            var vector3 = muzzleGameObject.transform.forward;
 
             var updateBulletPositionJob = new UpdateBulletPositionJob
             {
                 deltaTime = deltaTime,
-                vector3 = vector3,
+                // vector3 = vector3,
                 // ECB = ecb.AsParallelWriter()
 
             };    
@@ -43,6 +41,7 @@ namespace DOD.Scripts.Bullets
                 world = collisionWorld,
                 Enemies = SystemAPI.GetComponentLookup<EnemyTag>(true),
                 Healths = SystemAPI.GetComponentLookup<HealthComponent>(true),
+                Bullets = SystemAPI.GetComponentLookup<BulletTag>(true),
                 ECB = ecb.AsParallelWriter()
             };
             state.Dependency = bulletCollisionJob.ScheduleParallel(state.Dependency);
@@ -60,8 +59,6 @@ namespace DOD.Scripts.Bullets
         public partial struct UpdateBulletPositionJob : IJobEntity
         {
             public float deltaTime;
-            public Vector3 vector3 { get; set; }
-            // public EntityCommandBuffer.ParallelWriter ECB { get; set; }
 
             public void Execute([ChunkIndexInQuery] int chunkIndex, in Entity entity, ref LocalTransform localTransform, ref BulletFired fired, ref BulletLifeTime lifeTime, in SpeedComponent speedComponent)
             {
@@ -69,7 +66,7 @@ namespace DOD.Scripts.Bullets
                 if (fired._hasFired == 0)
                 {
                     fired._hasFired = 1;
-                    fired.fireDirection = vector3;
+                    fired.fireDirection = localTransform.Forward();
                 }
                 //Update position of the bullet
                 localTransform.Position += fired.fireDirection * speedComponent.Value * deltaTime; 
@@ -91,6 +88,8 @@ namespace DOD.Scripts.Bullets
             public ComponentLookup<HealthComponent> Healths;
             [ReadOnly]
             public ComponentLookup<EnemyTag> Enemies;
+            [ReadOnly]
+            public ComponentLookup<BulletTag> Bullets;
             public EntityCommandBuffer.ParallelWriter ECB;
 
             public void Execute([ChunkIndexInQuery] int chunkIndex, in Entity entity, in LocalTransform localTransform, in BulletFired fired, ref BulletLifeTime lifeTime)
@@ -106,7 +105,7 @@ namespace DOD.Scripts.Bullets
                 RaycastHit hit = new RaycastHit();
                 if (world.CastRay(rayCastInput, out hit))
                 {
-                    if (hit.Entity != entity)
+                    if (hit.Entity != entity && !Bullets.HasComponent(hit.Entity))
                     {
                         if (Enemies.HasComponent(hit.Entity))
                         {

@@ -3,9 +3,13 @@ using Unity.Burst;
 using Unity.Entities;
 using Unity.Transforms;
 using UnityEngine;
+using Random = Unity.Mathematics.Random;
+
 
 public partial struct BulletSpawnSystem : ISystem
 {
+    private Random generator;
+
     public void OnCreate(ref SystemState state)
     {
     }
@@ -16,49 +20,107 @@ public partial struct BulletSpawnSystem : ISystem
 
     public void OnUpdate(ref SystemState state)
     {
+        generator = new Random((uint) UnityEngine.Random.Range(-10000, 10000));
         var ecbSingleton = SystemAPI.GetSingleton<BeginSimulationEntityCommandBufferSystem.Singleton>();
         var ecb = ecbSingleton.CreateCommandBuffer(state.WorldUnmanaged);
+        var muzzleGameObject = GameObject.Find("MuzzleGameObject");
         
-        if (Input.GetButtonDown("Fire1"))
-        {
-            //Used for updating the position of the starting position for the bullet
-            var muzzleGameObject = GameObject.Find("MuzzleGameObject").transform.position;
-
-            var bulletSpawnJob = new SpawnBulletJob
+            if (Input.GetButtonDown("Fire1"))
             {
-                Ecb = ecb,
-                muzzleGameObject = muzzleGameObject
-            };
+                //Used for updating the position of the starting position for the bullet
+                if (muzzleGameObject.tag == "Handgun")
+                {
+                    var bulletSpawnJob = new SpawnBulletJob
+                    {
+                        Ecb = ecb,
+                        muzzleGameObjectPosition = muzzleGameObject.transform.position,
+                        muzzleGameObjectRotation = muzzleGameObject.transform.rotation,
+                        WeaponType = 0
+                    };
+                    // Schedule execution in a single thread, and do not block main thread.
+                    bulletSpawnJob.Run();
+                }
+                else if (muzzleGameObject.tag == "Shotgun")
+                {
+                    var bulletSpawnJob = new SpawnBulletJob
+                    {
+                        Ecb = ecb,
+                        muzzleGameObjectPosition = muzzleGameObject.transform.position,
+                        muzzleGameObjectRotation = muzzleGameObject.transform.rotation,
+                        WeaponType = 1,
+                        generator = generator
 
-            // Schedule execution in a single thread, and do not block main thread.
-            bulletSpawnJob.Run();
-        }
+                    };
+                    // Schedule execution in a single thread, and do not block main thread.
+                    bulletSpawnJob.Run();
+                }
+                
+            }
+        
     }
 
     [BurstCompile]
     public partial struct SpawnBulletJob : IJobEntity
     {
         public EntityCommandBuffer Ecb;
-        public Vector3 muzzleGameObject { get; set; }
+        public int WeaponType { get; set; }
+        public Vector3 muzzleGameObjectPosition { get; set; }
+        public Quaternion muzzleGameObjectRotation { get; set; }
+        public Random generator;
+
+
         void Execute(in BulletSpawnAspect bulletSpawnAspect)
         {
-            var instance = Ecb.Instantiate(bulletSpawnAspect.BulletPrefab);
-            var cannonBallTransform = LocalTransform.FromPosition(muzzleGameObject);
-            Ecb.SetComponent(instance, cannonBallTransform);
-            Ecb.SetComponent(instance, new BulletFired
+            Debug.Log(WeaponType);
+            //Handgun
+            if (WeaponType == 0)
             {
-                _hasFired = 0
-            });
-            Ecb.SetComponent(instance, new BulletLifeTime
+                var instance = Ecb.Instantiate(bulletSpawnAspect.BulletPrefab);
+                var bulletTransform = LocalTransform.FromPosition(muzzleGameObjectPosition);
+                bulletTransform.Rotation = muzzleGameObjectRotation;
+                Ecb.SetComponent(instance, bulletTransform);
+                Ecb.SetComponent(instance, new BulletFired
+                {
+                    _hasFired = 0
+                });
+                Ecb.SetComponent(instance, new BulletLifeTime
+                {
+                    maxLifeTime = 2
+                });
+                Ecb.AddComponent(instance, new SpeedComponent
+                {
+                    Value = 50
+                });
+                Ecb.AddComponent<IsDeadComponent>(instance);
+                Ecb.SetComponentEnabled(instance,typeof(IsDeadComponent), false);
+            }
+            //Shotgun
+            else if (WeaponType == 1)
             {
-                maxLifeTime = 2
-            });
-            Ecb.AddComponent(instance, new SpeedComponent
-            {
-                Value = 10
-            });
-            Ecb.AddComponent<IsDeadComponent>(instance);
-            Ecb.SetComponentEnabled(instance,typeof(IsDeadComponent), false);
+                float spread = 2.0f;
+                for (int i = 0; i < 6; i++) // spawn 5 bullets
+                {
+                    Quaternion spreadRotation = Quaternion.Euler(generator.NextFloat(-spread, spread), generator.NextFloat(-spread, spread), 0f);
+                    var instance = Ecb.Instantiate(bulletSpawnAspect.BulletPrefab);
+                    var bulletTransform = LocalTransform.FromPosition(muzzleGameObjectPosition);
+                    bulletTransform.Rotation = spreadRotation*muzzleGameObjectRotation;
+                    Ecb.SetComponent(instance, bulletTransform);
+                    Ecb.SetComponent(instance, new BulletFired
+                    {
+                        _hasFired = 0
+                    });
+                    Ecb.SetComponent(instance, new BulletLifeTime
+                    {
+                        maxLifeTime = 2
+                    });
+                    Ecb.AddComponent(instance, new SpeedComponent
+                    {
+                        Value = 40
+                    });
+                    Ecb.AddComponent<IsDeadComponent>(instance);
+                    Ecb.SetComponentEnabled(instance,typeof(IsDeadComponent), false);
+                }
+            }
         }
     }
 }

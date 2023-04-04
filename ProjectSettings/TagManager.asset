@@ -5,6 +5,9 @@ TagManager:
   serializedVersion: 2
   tags:
   - Bullet1
+  - Handgun
+  - Shotgun
+  - Machinegun
   layers:
   - Default
   - TransparentFX

@@ -28,10 +28,7 @@ namespace DOD.Scripts.Bullets
 
             var updateBulletPositionJob = new UpdateBulletPositionJob
             {
-                deltaTime = deltaTime,
-                // vector3 = vector3,
-                // ECB = ecb.AsParallelWriter()
-
+                deltaTime = deltaTime
             };    
             state.Dependency = updateBulletPositionJob.ScheduleParallel(state.Dependency);
             state.Dependency.Complete();

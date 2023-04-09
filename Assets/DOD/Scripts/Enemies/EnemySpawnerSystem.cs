@@ -1,3 +1,4 @@
+using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Transforms;
@@ -8,9 +9,13 @@ using Random = Unity.Mathematics.Random;
 public partial struct EnemySpawnerSystem : ISystem
 {
     private Random generator;
+    EntityQuery dayNightQuery;
+
 
     public void OnCreate(ref SystemState state)
     {
+        dayNightQuery = new EntityQueryBuilder(state.WorldUpdateAllocator)
+            .WithAll<DayNightComponent>().Build(ref state);
     }
 
     public void OnDestroy(ref SystemState state)
@@ -19,31 +24,41 @@ public partial struct EnemySpawnerSystem : ISystem
 
     public void OnUpdate(ref SystemState state)
     {
-        generator = new Random((uint) UnityEngine.Random.Range(-10000, 10000));
-
-        var ecbSingleton = SystemAPI.GetSingleton<BeginSimulationEntityCommandBufferSystem.Singleton>();
-        var ecb = ecbSingleton.CreateCommandBuffer(state.WorldUnmanaged);
-        
-        var spawnEnemyJob = new SpawnEnemyJob
+        var dayNight = dayNightQuery.ToComponentDataArray<DayNightComponent>(Allocator.Temp);
+        if (dayNight[0].isNight)
         {
-            Ecb = ecb,
-            generator = generator
-        };
-        spawnEnemyJob.Run();
-        //Disables the system update
-        state.Enabled = false;
+            if (!dayNight[0].enemiesHasSpawned)
+            {
+                generator = new Random((uint) UnityEngine.Random.Range(-10000, 10000));
+
+                var ecbSingleton = SystemAPI.GetSingleton<BeginSimulationEntityCommandBufferSystem.Singleton>();
+                var ecb = ecbSingleton.CreateCommandBuffer(state.WorldUnmanaged);
+        
+                var spawnEnemyJob = new SpawnEnemyJob
+                {
+                    Ecb = ecb,
+                    generator = generator,
+                    cycleNumber = dayNight[0].dayNightCycleNumber
+                };
+                spawnEnemyJob.Run();
+
+                var dayNightSpawnJob = new DayNightSystem.DayNightSpawnParameterJob().ScheduleParallel(state.Dependency);
+                dayNightSpawnJob.Complete();
+            }
+        }
     }
     
     public partial struct SpawnEnemyJob : IJobEntity
     {
         public EntityCommandBuffer Ecb;
         public Random generator;
-        
+        public int cycleNumber { get; set; }
+
         void Execute(in EnemySpawnAspect enemySpawnAspect)
         {
          Vector3 spawnAreaSize = new Vector3(10, 0, 10);
-
-            for (int i = 0; i < enemySpawnAspect.MeleeAmount; i++)
+         
+            for (int i = 0; i < enemySpawnAspect.MeleeAmount*cycleNumber; i++)
             {
                 float3 spawnPosition = enemySpawnAspect.SpawnPosition + new float3(generator.NextFloat(-spawnAreaSize.x, spawnAreaSize.x), 0, generator.NextFloat(-spawnAreaSize.z, spawnAreaSize.z));
 
@@ -65,7 +80,7 @@ public partial struct EnemySpawnerSystem : ISystem
                 });
             }
             
-            for (int i = 0; i < enemySpawnAspect.RangeAmount; i++)
+            for (int i = 0; i < enemySpawnAspect.RangeAmount*cycleNumber; i++)
             {
                 float3 spawnPosition = enemySpawnAspect.SpawnPosition + new float3(generator.NextFloat(-spawnAreaSize.x, spawnAreaSize.x), 0, generator.NextFloat(-spawnAreaSize.z, spawnAreaSize.z));
             

@@ -7,7 +7,6 @@ using UnityEngine;
 
 public partial struct DayNightSystem : ISystem
 {
-
     EntityQuery enemiesQuery;
     EntityQuery dayNightQuery;
     public void OnCreate(ref SystemState state)
@@ -53,6 +52,13 @@ public partial struct DayNightSystem : ISystem
         public void Execute(ref DayNightComponent dayNightComponent)
         {
             dayNightComponent.dayTime += deltaTime;
+            if (dayNightComponent.dayTime > dayNightComponent.maxDayTime)
+            {
+                if (!dayNightComponent.isNight)
+                {
+                    dayNightComponent.isNight = true;
+                }
+            }
         }
     }
     [BurstCompile]
@@ -64,6 +70,15 @@ public partial struct DayNightSystem : ISystem
             dayNightComponent.isNight = false;
             dayNightComponent.enemiesHasSpawned = false;
             dayNightComponent.dayNightCycleNumber++;
+        }
+    }
+    
+    [BurstCompile]
+    public partial struct DayNightSpawnParameterJob : IJobEntity
+    {
+        public void Execute(ref DayNightComponent dayNightComponent)
+        {
+            dayNightComponent.enemiesHasSpawned = true;
         }
     }
 }

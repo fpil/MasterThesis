@@ -57,7 +57,6 @@ public partial struct LootSpawnSystem : ISystem
 
         void Execute(in LootSpawnerAuthoring.LootPrefabs lootPrefabs)
         {
-            Debug.Log("Spawn loot");
             int maxSpawnRate = 101;
             int spawnChance = generator.NextInt(0, maxSpawnRate);
             if (spawnChance <= lootPrefabs.spawnRate)

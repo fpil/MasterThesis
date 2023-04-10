@@ -40,7 +40,7 @@ public partial struct EnemySpawnerSystem : ISystem
                     generator = generator,
                     cycleNumber = dayNight[0].dayNightCycleNumber
                 };
-                spawnEnemyJob.Run();
+                spawnEnemyJob.Schedule();
 
                 var dayNightSpawnJob = new DayNightSystem.DayNightSpawnParameterJob().ScheduleParallel(state.Dependency);
                 dayNightSpawnJob.Complete();

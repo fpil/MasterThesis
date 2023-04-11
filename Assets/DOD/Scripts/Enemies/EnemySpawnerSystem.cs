@@ -42,8 +42,16 @@ public partial struct EnemySpawnerSystem : ISystem
                 };
                 spawnEnemyJob.Schedule();
 
+                //Destroy the loot
                 var dayNightSpawnJob = new DayNightSystem.DayNightSpawnParameterJob().ScheduleParallel(state.Dependency);
                 dayNightSpawnJob.Complete();
+                
+                var destroyLootJob = new LootBehaviorSystem.DestroyLootJob
+                {
+                    ecb = ecb.AsParallelWriter()
+                };
+                state.Dependency = destroyLootJob.ScheduleParallel(state.Dependency);
+                state.Dependency.Complete();
             }
         }
     }

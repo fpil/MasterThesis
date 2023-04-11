@@ -32,21 +32,22 @@ public partial struct LootBehaviorSystem : ISystem
         var ecbSingleton = SystemAPI.GetSingleton<BeginSimulationEntityCommandBufferSystem.Singleton>();
         EntityCommandBuffer ecb = ecbSingleton.CreateCommandBuffer(state.WorldUnmanaged);
 
-
-
-        var lootMovementJob = new LootBehaviorJob
-        {
-            deltaTime = deltaTime,
-            elapsedTime = elaspedTime,
-            world = collisionWorld, 
-            player = SystemAPI.GetComponentLookup<PlayerTagComponent>(true),
-            shotgunLoot = SystemAPI.GetComponentLookup<ShotgunLootTag>(true),
-            bulletController = SystemAPI.GetSingletonRW<Ammo>(), 
-            generator = generator, 
-            ecb = ecb.AsParallelWriter()
-        };
-        state.Dependency = lootMovementJob.ScheduleParallel(state.Dependency);
-        state.Dependency.Complete();
+        // else
+        // {
+            var lootMovementJob = new LootBehaviorJob
+            {
+                deltaTime = deltaTime,
+                elapsedTime = elaspedTime,
+                world = collisionWorld, 
+                player = SystemAPI.GetComponentLookup<PlayerTagComponent>(true),
+                shotgunLoot = SystemAPI.GetComponentLookup<ShotgunLootTag>(true),
+                bulletController = SystemAPI.GetSingletonRW<Ammo>(), 
+                generator = generator, 
+                ecb = ecb.AsParallelWriter()
+            };
+            state.Dependency = lootMovementJob.ScheduleParallel(state.Dependency);
+            state.Dependency.Complete();
+        // }
     }
     
     [BurstCompile]
@@ -88,6 +89,17 @@ public partial struct LootBehaviorSystem : ISystem
                 }
             }
             result.Dispose();
+        }
+    }
+    
+    [BurstCompile]
+    public partial struct DestroyLootJob : IJobEntity
+    {
+        public EntityCommandBuffer.ParallelWriter ecb { get; set; }
+        void Execute([ChunkIndexInQuery] int chunkIndex,in Entity entity, in LootTag lootTag)
+        {
+            ecb.DestroyEntity(chunkIndex,entity);
+           
         }
     }
 }

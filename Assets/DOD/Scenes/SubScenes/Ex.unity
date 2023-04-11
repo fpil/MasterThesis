@@ -633,7 +633,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   dayTime: 0
-  maxDayTime: 1
+  maxDayTime: 5
   isNight: 0
   enemiesHasSpawned: 0
   enemiesLeft: 0
@@ -654,12 +654,12 @@ PrefabInstance:
     - target: {fileID: 3870486635128729312, guid: 7444feb5073911a4d9b45a914cf8ec87,
         type: 3}
       propertyPath: meleeAmount
-      value: 10
+      value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 3870486635128729312, guid: 7444feb5073911a4d9b45a914cf8ec87,
         type: 3}
       propertyPath: rangeAmount
-      value: 10
+      value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 4455850259495268369, guid: 7444feb5073911a4d9b45a914cf8ec87,
         type: 3}

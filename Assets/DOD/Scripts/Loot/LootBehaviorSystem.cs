@@ -32,22 +32,19 @@ public partial struct LootBehaviorSystem : ISystem
         var ecbSingleton = SystemAPI.GetSingleton<BeginSimulationEntityCommandBufferSystem.Singleton>();
         EntityCommandBuffer ecb = ecbSingleton.CreateCommandBuffer(state.WorldUnmanaged);
 
-        // else
-        // {
-            var lootMovementJob = new LootBehaviorJob
-            {
-                deltaTime = deltaTime,
-                elapsedTime = elaspedTime,
-                world = collisionWorld, 
-                player = SystemAPI.GetComponentLookup<PlayerTagComponent>(true),
-                shotgunLoot = SystemAPI.GetComponentLookup<ShotgunLootTag>(true),
-                bulletController = SystemAPI.GetSingletonRW<Ammo>(), 
-                generator = generator, 
-                ecb = ecb.AsParallelWriter()
-            };
-            state.Dependency = lootMovementJob.ScheduleParallel(state.Dependency);
-            state.Dependency.Complete();
-        // }
+        var lootMovementJob = new LootBehaviorJob
+        {
+            deltaTime = deltaTime,
+            elapsedTime = elaspedTime,
+            world = collisionWorld, 
+            player = SystemAPI.GetComponentLookup<PlayerTagComponent>(true),
+            shotgunLoot = SystemAPI.GetComponentLookup<ShotgunLootTag>(true),
+            bulletController = SystemAPI.GetSingletonRW<Ammo>(), 
+            generator = generator, 
+            ecb = ecb.AsParallelWriter()
+        };
+        state.Dependency = lootMovementJob.ScheduleParallel(state.Dependency);
+        state.Dependency.Complete();
     }
     
     [BurstCompile]

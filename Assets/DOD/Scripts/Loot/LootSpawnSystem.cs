@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
@@ -49,6 +50,7 @@ public partial struct LootSpawnSystem : ISystem
         }
     }
     
+    [BurstCompile]
      public partial struct SpawnLootJob : IJobEntity
     {
         public EntityCommandBuffer Ecb;
@@ -66,13 +68,16 @@ public partial struct LootSpawnSystem : ISystem
                 if (lootPrefabs.spawnRateItem <= spawnChanceItem)
                 {
                     instance = Ecb.Instantiate(lootPrefabs.shotgunLootPrefab);
+                    Ecb.AddComponent<ShotgunLootTag>(instance);
                 }
                 else
                 {
                     instance = Ecb.Instantiate(lootPrefabs.machinegunLootPrefab);
+                    Ecb.AddComponent<MachinegunLootTag>(instance);
                 }
                 var transform = LocalTransform.FromPosition(spawnPosition);
                 Ecb.SetComponent(instance,transform);
+                Ecb.AddComponent<LootTag>(instance);
                 // Ecb.AddComponent<IsDeadComponent>(instance);
             }
         }

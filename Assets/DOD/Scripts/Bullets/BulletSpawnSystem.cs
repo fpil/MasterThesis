@@ -96,7 +96,7 @@ public partial struct BulletSpawnSystem : ISystem
         public Random generator;
 
 
-        void Execute(in BulletSpawnAspect bulletSpawnAspect)
+        void Execute(ref BulletSpawnAspect bulletSpawnAspect)
         {
             //Handgun
             if (WeaponType == 0)
@@ -109,25 +109,33 @@ public partial struct BulletSpawnSystem : ISystem
             //Shotgun
             else if (WeaponType == 1)
             {
-                float spread = 2.0f;
-                for (int i = 0; i < 6; i++) // spawn 5 bullets
+                if (bulletSpawnAspect.ShotgunAmmo > 0)
                 {
-                    Quaternion spreadRotation = Quaternion.Euler(generator.NextFloat(-spread, spread), generator.NextFloat(-spread, spread), 0f);
-                    var instance = Ecb.Instantiate(bulletSpawnAspect.BulletPrefab);
-                    var bulletTransform = LocalTransform.FromPosition(muzzleGameObjectPosition);
-                    bulletTransform.Rotation = spreadRotation*muzzleGameObjectRotation;
-                    AddComponents(instance, bulletTransform, 40);
+                    float spread = 2.0f;
+                    for (int i = 0; i < 6; i++) // spawn 5 bullets
+                    {
+                        Quaternion spreadRotation = Quaternion.Euler(generator.NextFloat(-spread, spread), generator.NextFloat(-spread, spread), 0f);
+                        var instance = Ecb.Instantiate(bulletSpawnAspect.BulletPrefab);
+                        var bulletTransform = LocalTransform.FromPosition(muzzleGameObjectPosition);
+                        bulletTransform.Rotation = spreadRotation*muzzleGameObjectRotation;
+                        AddComponents(instance, bulletTransform, 40);
+                    }
+                    bulletSpawnAspect.ShotgunAmmo--;
                 }
             }
             //Machinegun
             else if (WeaponType == 2)
             {
-                float spread = 2.0f;
-                Quaternion spreadRotation = Quaternion.Euler(generator.NextFloat(-spread, spread), generator.NextFloat(-spread, spread), 0f);
-                var instance = Ecb.Instantiate(bulletSpawnAspect.BulletPrefab);
-                var bulletTransform = LocalTransform.FromPosition(muzzleGameObjectPosition);
-                bulletTransform.Rotation = spreadRotation*muzzleGameObjectRotation;
-                AddComponents(instance, bulletTransform,60);
+                if (bulletSpawnAspect.MachineGunAmmo > 0)
+                {
+                    float spread = 2.0f;
+                    Quaternion spreadRotation = Quaternion.Euler(generator.NextFloat(-spread, spread), generator.NextFloat(-spread, spread), 0f);
+                    var instance = Ecb.Instantiate(bulletSpawnAspect.BulletPrefab);
+                    var bulletTransform = LocalTransform.FromPosition(muzzleGameObjectPosition);
+                    bulletTransform.Rotation = spreadRotation*muzzleGameObjectRotation;
+                    AddComponents(instance, bulletTransform,60);
+                    bulletSpawnAspect.MachineGunAmmo--;
+                }
             }
         }
 

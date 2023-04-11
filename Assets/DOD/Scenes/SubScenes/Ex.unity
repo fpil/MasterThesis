@@ -430,6 +430,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   bulletPrefab: {fileID: 1907918821771943255, guid: 736250591732d0a4caffb60a3df72620,
     type: 3}
+  shotgunAmmo: 50
+  machineGunAmmo: 100
 --- !u!1001 &210705325
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -631,7 +633,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   dayTime: 0
-  maxDayTime: 10
+  maxDayTime: 1
   isNight: 0
   enemiesHasSpawned: 0
   enemiesLeft: 0

@@ -6,15 +6,20 @@ namespace DOD.Scripts.Bullets
 {
     public class BulletSpawnerBaker : MonoBehaviour
     {
-        // public GameObject spawnPosition;
         public Transform bulletPrefab; 
+        public int shotgunAmmo; 
+        public int machineGunAmmo; 
     }
 }
 
 public struct BulletSpawnPositionComponent : IComponentData
 {
     public Entity BulletPrefab;
-    // public Entity BulletSpawn;
+}
+public struct Ammo : IComponentData
+{
+    public int ShotgunAmmo;
+    public int MachineGunAmmo;
 }
 
 
@@ -26,6 +31,10 @@ public class BulletBaker : Baker<BulletSpawnerBaker>
         {
             BulletPrefab = GetEntity(authoring.bulletPrefab),
         } );
-        // AddComponent(new BulletHasFiredComponent());
+        AddComponent(new Ammo
+        {
+            ShotgunAmmo = authoring.shotgunAmmo, 
+            MachineGunAmmo = authoring.machineGunAmmo
+        });
     }
 }

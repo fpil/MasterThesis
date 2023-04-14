@@ -1,12 +1,14 @@
 using Assets.DOD.Scripts.Enemies;
 using DOD.Scripts.Bullets;
 using DOD.Scripts.Enemies;
+using DOD.Scripts.Environment;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Physics;
 using Unity.Transforms;
+using Unity.VisualScripting;
 using UnityEngine;
 using RaycastHit = Unity.Physics.RaycastHit;
 
@@ -38,7 +40,8 @@ public partial struct EnemyBehaviorSystem : ISystem
             deltaTime = deltaTime,
             world = collisionWorld,
             EntityPositions = SystemAPI.GetComponentLookup<LocalToWorld>(true), //Possibly Expensive
-            Enemies = SystemAPI.GetComponentLookup<EnemyTag>(true) //Possibly Expensive
+            Enemies = SystemAPI.GetComponentLookup<EnemyTag>(true), //Possibly Expensive
+            Obstacles = SystemAPI.GetComponentLookup<ObstacleTag>(true)
         };
         state.Dependency = moveTowardPlayerJob.ScheduleParallel(state.Dependency);
         // state.Dependency.Complete();
@@ -90,6 +93,8 @@ public partial struct EnemyBehaviorSystem : ISystem
         public LocalTransform PlayerTransform { get; set; }
         public float deltaTime;
         [field: ReadOnly] public CollisionWorld world { get; set; }
+        [field: ReadOnly] public ComponentLookup<ObstacleTag> Obstacles { get; set; }
+
         [ReadOnly] 
         public ComponentLookup<LocalToWorld> EntityPositions; //Expensive 
         [ReadOnly]
@@ -99,10 +104,45 @@ public partial struct EnemyBehaviorSystem : ISystem
         private const float separationForce = 1f;
         void Execute(in Entity entity, ref LocalTransform localTransform)
         {
+            //Normal movement
             Vector3 direction = PlayerTransform.Position - localTransform.Position;
             direction = direction.normalized;
-            localTransform.Position += new float3(direction * 3 * deltaTime); //Todo --> adjust the speed to be specific to the enemy
-            localTransform.Rotation = Quaternion.LookRotation(direction);
+
+            // Avoid obstacles
+             var rayCastInput = new RaycastInput
+             {
+                 Start = localTransform.Position+(float3)direction,
+                 End = localTransform.Position+(((float3)direction*2)),
+                 Filter = CollisionFilter.Default
+             };
+             RaycastHit hit = new RaycastHit();
+             bool move = true; 
+             if (world.CastRay(rayCastInput, out hit))
+             {
+                 if (hit.Entity != entity)
+                 {
+                     if (Obstacles.HasComponent(hit.Entity))
+                     {
+                         move = false; 
+                         Vector3 newDirection = Vector3.zero;
+                         Vector3 hitNormal = hit.Position;
+                         hitNormal.y = 0.0f;
+                         newDirection = Vector3.Reflect(direction, hitNormal);
+                         newDirection = newDirection.normalized;
+
+                         // Move in the new direction
+                         localTransform.Position += new float3(newDirection * 3 * deltaTime); //Todo --> adjust the speed to be specific to the enemy
+                     }
+                 }
+             }
+             //Normal movement
+             if(move)
+             {
+                 localTransform.Position += new float3(direction * 3 * deltaTime); //Todo --> adjust the speed to be specific to the enemy
+                 localTransform.Rotation = Quaternion.LookRotation(direction);
+             }
+
+
             
             
             // Separation

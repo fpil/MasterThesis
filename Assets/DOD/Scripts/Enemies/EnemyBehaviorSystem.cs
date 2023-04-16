@@ -131,21 +131,18 @@ public partial struct EnemyBehaviorSystem : ISystem
                          newDirection = newDirection.normalized;
 
                          // Move in the new direction
-                         localTransform.Position += new float3(newDirection * 3 * deltaTime); //Todo --> adjust the speed to be specific to the enemy
+                         localTransform.Position += new float3(newDirection * 3 * deltaTime); 
                      }
                  }
              }
              //Normal movement
              if(move)
              {
-                 localTransform.Position += new float3(direction * 3 * deltaTime); //Todo --> adjust the speed to be specific to the enemy
+                 localTransform.Position += new float3(direction * 3 * deltaTime);
                  localTransform.Rotation = Quaternion.LookRotation(direction);
              }
 
-
-            
-            
-            // Separation
+             // Separation
             var result = new NativeList<DistanceHit>(Allocator.TempJob);
             if (world.OverlapSphere(localTransform.Position, separationRadius, ref result, CollisionFilter.Default))
             {

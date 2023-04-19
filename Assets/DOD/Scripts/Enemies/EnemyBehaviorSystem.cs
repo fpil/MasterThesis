@@ -46,8 +46,7 @@ public partial struct EnemyBehaviorSystem : ISystem
         };
         state.Dependency = moveTowardPlayerJob.ScheduleParallel(state.Dependency);
         // state.Dependency.Complete();
-        
-        
+
         var destroyEnemyJob = new DestroyEnemyJob
         {
             ECB = ecb.AsParallelWriter()

@@ -164,8 +164,8 @@ public partial struct EnemyBehaviorSystem : ISystem
     }
 
     [UpdateAfter(typeof(BulletBehaviourSystem.BulletCollisionJob))]
-    [BurstCompile]
     [WithAll(typeof(IsDeadComponent))]
+    [BurstCompile]
     public partial struct DestroyEnemyJob : IJobEntity
     {
         public EntityCommandBuffer.ParallelWriter ECB;
@@ -190,7 +190,7 @@ public partial struct EnemyBehaviorSystem : ISystem
                 float distance = Vector3.Distance(PlayerTransform.Position, localTransform.Position);
                 if (distance <= attackSettings.Range)
                 {
-                    Debug.Log("Attack");
+                    // Debug.Log("Attack");
                     attack.LastAttackTime = 0;
                 }
             }

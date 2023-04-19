@@ -6,7 +6,7 @@ using Unity.Transforms;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-// [BurstCompile]
+[BurstCompile]
 public partial struct CharacterControllerSystem : ISystem
 {
     public void OnCreate(ref SystemState state)
@@ -31,13 +31,12 @@ public partial struct CharacterControllerSystem : ISystem
             movement = movement,
             deltaTime = deltaTime 
         };
-        // playerCharacterMoveJob.Run(); //main thread
         state.Dependency = playerCharacterMoveJob.ScheduleParallel(state.Dependency);
         state.Dependency.Complete();
 
     }
     [WithAll(typeof(PlayerTagComponent))]
-    // [BurstCompile]
+    [BurstCompile]
     public partial struct PlayerCharacterMoveJob : IJobEntity
     {
         public Quaternion cameraTransform; 

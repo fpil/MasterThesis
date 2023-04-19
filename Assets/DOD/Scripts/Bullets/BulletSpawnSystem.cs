@@ -20,7 +20,7 @@ public partial struct BulletSpawnSystem : ISystem
     {
     }
 
-    [BurstCompile]
+    // [BurstCompile] // Cannot be bursted because of the GameObject.Find
     public void OnUpdate(ref SystemState state)
     {
         lastAttack+= state.WorldUnmanaged.Time.DeltaTime;

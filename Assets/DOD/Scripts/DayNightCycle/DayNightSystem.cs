@@ -5,6 +5,7 @@ using Unity.Collections;
 using Unity.Entities;
 using UnityEngine;
 
+[BurstCompile]
 public partial struct DayNightSystem : ISystem
 {
     EntityQuery enemiesQuery;
@@ -21,6 +22,7 @@ public partial struct DayNightSystem : ISystem
     {
     }
 
+    [BurstCompile]
     public void OnUpdate(ref SystemState state)
     {
         float deltaTime = state.WorldUnmanaged.Time.DeltaTime;

@@ -7,7 +7,9 @@ namespace Assets.DOD.Scripts.Enemies
     public class EnemySpawnAuthoring : UnityEngine.MonoBehaviour
     {
         public GameObject meleePrefab;
-        public int amount;
+        public GameObject rangePrefab;
+        public int meleeAmount;
+        public int rangeAmount;
         class EnemyBaker : Baker<EnemySpawnAuthoring>
         {
             public override void Bake(EnemySpawnAuthoring authoring)
@@ -15,10 +17,12 @@ namespace Assets.DOD.Scripts.Enemies
                 AddComponent(new EnemyPrefabs
                 {
                     MeleePrefab = GetEntity(authoring.meleePrefab),
+                    RangePrefab = GetEntity(authoring.rangePrefab)
                 } );
                 AddComponent(new EnemySpawnSettings
                 {
-                    Amount = authoring.amount, 
+                    MeleeAmount = authoring.meleeAmount, 
+                    RangeAmount = authoring.rangeAmount,
                     SpawnPosition = authoring.gameObject.transform.position
                 } );
             }
@@ -28,12 +32,14 @@ namespace Assets.DOD.Scripts.Enemies
     public struct EnemyPrefabs : IComponentData
     {
         public Entity MeleePrefab;
+        public Entity RangePrefab;
         //Todo --> add new enemy types here
     }
     public struct EnemySpawnSettings : IComponentData
     {
-        public int Amount;
         public float3 SpawnPosition;
+        public int MeleeAmount;
+        public int RangeAmount;
         //todo --> add type parameter to define the type of enemy to be spawned 
     }
 }

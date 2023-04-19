@@ -547,8 +547,24 @@ PrefabInstance:
     - target: {fileID: 3870486635128729312, guid: 7444feb5073911a4d9b45a914cf8ec87,
         type: 3}
       propertyPath: amount
-      value: 100
+      value: 5000
       objectReference: {fileID: 0}
+    - target: {fileID: 3870486635128729312, guid: 7444feb5073911a4d9b45a914cf8ec87,
+        type: 3}
+      propertyPath: meleeAmount
+      value: 2500
+      objectReference: {fileID: 0}
+    - target: {fileID: 3870486635128729312, guid: 7444feb5073911a4d9b45a914cf8ec87,
+        type: 3}
+      propertyPath: rangeAmount
+      value: 2500
+      objectReference: {fileID: 0}
+    - target: {fileID: 3870486635128729312, guid: 7444feb5073911a4d9b45a914cf8ec87,
+        type: 3}
+      propertyPath: rangePrefab
+      value: 
+      objectReference: {fileID: 7315762863330963977, guid: f3bc1c0b0928df242beb0a6760bbf1e0,
+        type: 3}
     - target: {fileID: 4455850259495268369, guid: 7444feb5073911a4d9b45a914cf8ec87,
         type: 3}
       propertyPath: m_RootOrder

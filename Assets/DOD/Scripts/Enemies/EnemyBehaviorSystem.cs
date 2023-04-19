@@ -10,7 +10,7 @@ using Unity.Transforms;
 using UnityEngine;
 using RaycastHit = Unity.Physics.RaycastHit;
 
-
+[BurstCompile]
 public partial struct EnemyBehaviorSystem : ISystem
 {
     private EntityQuery playerQuery;
@@ -23,6 +23,7 @@ public partial struct EnemyBehaviorSystem : ISystem
     {
     }
 
+    [BurstCompile]
     public void OnUpdate(ref SystemState state)
     {
         Entity playerEntity = playerQuery.GetSingletonEntity(); //Maybe not the best approach to use a singleton
@@ -57,6 +58,28 @@ public partial struct EnemyBehaviorSystem : ISystem
             deltaTime = deltaTime
         };
         state.Dependency = meleeAttackJob.ScheduleParallel(state.Dependency);
+        state.Dependency.Complete();
+        
+        var rangeAttackJob = new RangeAttackJob
+        {
+            PlayerTransform = playerTransform, 
+            deltaTime = deltaTime, 
+            Ecb = ecb,
+            time = state.WorldUnmanaged.Time.ElapsedTime
+        
+        };
+        // rangeAttackJob.Run();
+        state.Dependency = rangeAttackJob.Schedule(state.Dependency); //cannot be parallel because of structural change
+        state.Dependency.Complete();
+        //
+        var throwableParabolaJob = new ThrowableParabolaJob()
+        {
+            time = state.WorldUnmanaged.Time.ElapsedTime,
+            Ecb = ecb.AsParallelWriter(),
+            world = collisionWorld,
+            Player = SystemAPI.GetComponentLookup<PlayerTagComponent>(true)
+        };
+        state.Dependency = throwableParabolaJob.ScheduleParallel(state.Dependency);
         state.Dependency.Complete();
     }
     
@@ -129,10 +152,95 @@ public partial struct EnemyBehaviorSystem : ISystem
                 float distance = Vector3.Distance(PlayerTransform.Position, localTransform.Position);
                 if (distance <= attackSettings.Range)
                 {
-                    Debug.Log("Attack");
+                    // Debug.Log("Attack");
                     attack.LastAttackTime = 0;
                 }
             }
+        }
+    }
+    
+    [BurstCompile]
+    [WithAll(typeof(RangeEnemyTag))]
+    public partial struct RangeAttackJob : IJobEntity
+    {
+        public EntityCommandBuffer Ecb;
+        
+        public float deltaTime;
+        public LocalTransform PlayerTransform { get; set; }
+        public double time { get; set; }
+        
+        void Execute(in LocalTransform localTransform, ref AttackComponent attack, in RangeAttackSettingsComponent attackSettings, in ThrowableAspect throwableAspect)
+        {
+            attack.LastAttackTime += deltaTime;
+            if (attack.LastAttackTime > attackSettings.MaxTimer)
+            {
+                float distance = Vector3.Distance(PlayerTransform.Position, localTransform.Position);
+                if (distance <= attackSettings.Range)
+                {
+                    var instance = Ecb.Instantiate(throwableAspect.ThrowablePrefab);
+                    Ecb.SetComponent(instance, LocalTransform.FromPosition(localTransform.Position));
+                    Ecb.AddComponent<ThrowableTag>(instance);
+                    Ecb.AddComponent(instance, new ThrowableSettingsComponent
+                    {
+                        targetPos = PlayerTransform.Position, 
+                        startPos = localTransform.Position,
+                        distance = Vector3.Distance(localTransform.Position,PlayerTransform.Position),
+                        startTime = time, 
+                        terrainHeight = -1.52f,
+                        height = 2f
+                    });
+                    Ecb.AddComponent<IsDeadComponent>(instance);
+                    Ecb.SetComponentEnabled(instance,ComponentType.ReadWrite<IsDeadComponent>(), false);
+                    // Ecb.SetComponentEnabled(instance,typeof(IsDeadComponent), false);
+                    attack.LastAttackTime = 0;
+                }
+            }
+        }
+    }
+    [BurstCompile]
+    [WithAll(typeof(ThrowableTag))]
+    public partial struct ThrowableParabolaJob : IJobEntity
+    {
+        public EntityCommandBuffer.ParallelWriter Ecb;
+        [field: ReadOnly] public CollisionWorld world { get; set; }
+        [ReadOnly]
+        public ComponentLookup<PlayerTagComponent> Player;
+    
+    
+        public double time { get; set; }
+    
+        void Execute([ChunkIndexInQuery] int chunkIndex, in Entity entity, ref LocalTransform localTransform, in ThrowableSettingsComponent throwableSettingsComponent)
+        {
+            float distanceSoFar = ((float)time - (float)throwableSettingsComponent.startTime) * 5;
+    
+            float missingDistance = distanceSoFar / throwableSettingsComponent.distance;
+    
+            Vector3 currentPos = Vector3.Lerp(throwableSettingsComponent.startPos, throwableSettingsComponent.targetPos, missingDistance);
+            float parabolaHeight = throwableSettingsComponent.height * Mathf.Sin(missingDistance * Mathf.PI);
+            currentPos.y = Mathf.Max(Mathf.Lerp(throwableSettingsComponent.startPos.y, throwableSettingsComponent.targetPos.y, missingDistance) + parabolaHeight, throwableSettingsComponent.terrainHeight);
+    
+            localTransform.Position = currentPos;
+    
+            if (localTransform.Position.y <= throwableSettingsComponent.targetPos.y)
+            {
+                Ecb.SetComponentEnabled<IsDeadComponent>(chunkIndex, entity,true);
+            }
+    
+            //Collision check
+            float radius = .2f;
+            var result = new NativeList<DistanceHit>(Allocator.TempJob);
+            if (world.OverlapSphere(localTransform.Position, radius, ref result, CollisionFilter.Default))
+            {
+                for (int i = 0; i < result.Length; i++)
+                {
+                    if (Player.HasComponent(result[i].Entity))
+                    {
+                        // Debug.Log("Hit");
+                        Ecb.SetComponentEnabled<IsDeadComponent>(chunkIndex, entity,true);
+                    }
+                }
+            }
+            result.Dispose();
         }
     }
 }

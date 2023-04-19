@@ -43,7 +43,7 @@ public partial struct EnemySpawnerSystem : ISystem
         {
          Vector3 spawnAreaSize = new Vector3(10, 0, 10);
 
-            for (int i = 0; i < enemySpawnAspect.Amount; i++)
+            for (int i = 0; i < enemySpawnAspect.MeleeAmount; i++)
             {
                 float3 spawnPosition = enemySpawnAspect.SpawnPosition + new float3(generator.NextFloat(-spawnAreaSize.x, spawnAreaSize.x), 0, generator.NextFloat(-spawnAreaSize.z, spawnAreaSize.z));
 
@@ -63,7 +63,28 @@ public partial struct EnemySpawnerSystem : ISystem
                     Range = 1.5f, 
                     MaxTimer = 1f
                 });
-         }
+            }
+            for (int i = 0; i < enemySpawnAspect.RangeAmount; i++)
+            {
+                float3 spawnPosition = enemySpawnAspect.SpawnPosition + new float3(generator.NextFloat(-spawnAreaSize.x, spawnAreaSize.x), 0, generator.NextFloat(-spawnAreaSize.z, spawnAreaSize.z));
+
+                var instance = Ecb.Instantiate(enemySpawnAspect.RangePrefab);
+                var enemyTransForm = LocalTransform.FromPosition(spawnPosition);
+                Ecb.SetComponent(instance,enemyTransForm);
+                Ecb.AddComponent(instance, new EnemyTag());
+                Ecb.AddComponent(instance, new HealthComponent
+                {
+                    value = 20
+                });
+                Ecb.AddComponent<IsDeadComponent>(instance);
+                Ecb.SetComponentEnabled(instance,typeof(IsDeadComponent), false);
+                Ecb.AddComponent(instance, new AttackComponent());
+                Ecb.AddSharedComponent(instance, new RangeAttackSettingsComponent
+                {
+                    Range = 30f, 
+                    MaxTimer = 3f
+                });
+            }
         }
     }
 }

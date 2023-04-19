@@ -1,3 +1,4 @@
+using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
@@ -5,7 +6,7 @@ using Unity.Transforms;
 using UnityEngine;
 using Random = Unity.Mathematics.Random;
 
-
+[BurstCompile]
 public partial struct EnemySpawnerSystem : ISystem
 {
     private Random generator;
@@ -22,6 +23,7 @@ public partial struct EnemySpawnerSystem : ISystem
     {
     }
 
+    [BurstCompile]
     public void OnUpdate(ref SystemState state)
     {
         var dayNight = dayNightQuery.ToComponentDataArray<DayNightComponent>(Allocator.Temp);
@@ -56,6 +58,7 @@ public partial struct EnemySpawnerSystem : ISystem
         }
     }
     
+    [BurstCompile]
     public partial struct SpawnEnemyJob : IJobEntity
     {
         public EntityCommandBuffer Ecb;
@@ -79,7 +82,7 @@ public partial struct EnemySpawnerSystem : ISystem
                     value = 10
                 });
                 Ecb.AddComponent<IsDeadComponent>(instance);
-                Ecb.SetComponentEnabled(instance,typeof(IsDeadComponent), false);
+                Ecb.SetComponentEnabled(instance,ComponentType.ReadWrite<IsDeadComponent>(), false);
                 Ecb.AddComponent(instance, new AttackComponent());
                 Ecb.AddSharedComponent(instance, new MeleeAttackSettingsComponent
                 {
@@ -101,7 +104,7 @@ public partial struct EnemySpawnerSystem : ISystem
                     value = 20
                 });
                 Ecb.AddComponent<IsDeadComponent>(instance);
-                Ecb.SetComponentEnabled(instance,typeof(IsDeadComponent), false);
+                Ecb.SetComponentEnabled(instance,ComponentType.ReadWrite<IsDeadComponent>(), false);
                 Ecb.AddComponent(instance, new AttackComponent());
                 Ecb.AddSharedComponent(instance, new RangeAttackSettingsComponent
                 {

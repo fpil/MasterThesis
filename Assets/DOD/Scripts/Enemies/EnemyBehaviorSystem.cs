@@ -12,7 +12,7 @@ using Unity.VisualScripting;
 using UnityEngine;
 using RaycastHit = Unity.Physics.RaycastHit;
 
-
+[BurstCompile]
 public partial struct EnemyBehaviorSystem : ISystem
 {
     private EntityQuery playerQuery;
@@ -25,6 +25,7 @@ public partial struct EnemyBehaviorSystem : ISystem
     {
     }
 
+    [BurstCompile]
     public void OnUpdate(ref SystemState state)
     {
         Entity playerEntity = playerQuery.GetSingletonEntity(); //Maybe not the best approach to use a singleton
@@ -226,7 +227,7 @@ public partial struct EnemyBehaviorSystem : ISystem
                         height = 2f
                     });
                     Ecb.AddComponent<IsDeadComponent>(instance);
-                    Ecb.SetComponentEnabled(instance,typeof(IsDeadComponent), false);
+                    Ecb.SetComponentEnabled(instance,ComponentType.ReadWrite<IsDeadComponent>(), false);
                     attack.LastAttackTime = 0;
                 }
             }
@@ -270,7 +271,7 @@ public partial struct EnemyBehaviorSystem : ISystem
                 {
                     if (Player.HasComponent(result[i].Entity))
                     {
-                        Debug.Log("Hit");
+                        // Debug.Log("Hit");
                         Ecb.SetComponentEnabled<IsDeadComponent>(chunkIndex, entity,true);
                     }
                 }

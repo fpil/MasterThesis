@@ -33,13 +33,11 @@ namespace Assets.DOD.Scripts.Enemies
     {
         public Entity MeleePrefab;
         public Entity RangePrefab;
-        //Todo --> add new enemy types here
     }
     public struct EnemySpawnSettings : IComponentData
     {
         public int MeleeAmount;
         public int RangeAmount;
         public float3 SpawnPosition;
-        //todo --> add type parameter to define the type of enemy to be spawned 
     }
 }

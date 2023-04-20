@@ -1,4 +1,3 @@
-using Assets.DOD.Scripts.Enemies;
 using DOD.Scripts.Bullets;
 using DOD.Scripts.Enemies;
 using DOD.Scripts.Environment;
@@ -8,7 +7,6 @@ using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Physics;
 using Unity.Transforms;
-using Unity.VisualScripting;
 using UnityEngine;
 using RaycastHit = Unity.Physics.RaycastHit;
 
@@ -28,7 +26,7 @@ public partial struct EnemyBehaviorSystem : ISystem
     [BurstCompile]
     public void OnUpdate(ref SystemState state)
     {
-        Entity playerEntity = playerQuery.GetSingletonEntity(); //Maybe not the best approach to use a singleton
+        Entity playerEntity = playerQuery.GetSingletonEntity();
         LocalTransform playerTransform = state.EntityManager.GetComponentData<LocalTransform>(playerEntity);
         var deltaTime = state.WorldUnmanaged.Time.DeltaTime;
         var collisionWorld = SystemAPI.GetSingleton<PhysicsWorldSingleton>().CollisionWorld;
@@ -45,14 +43,12 @@ public partial struct EnemyBehaviorSystem : ISystem
             Obstacles = SystemAPI.GetComponentLookup<ObstacleTag>(true)
         };
         state.Dependency = moveTowardPlayerJob.ScheduleParallel(state.Dependency);
-        // state.Dependency.Complete();
 
         var destroyEnemyJob = new DestroyEnemyJob
         {
             ECB = ecb.AsParallelWriter()
         };
         state.Dependency = destroyEnemyJob.ScheduleParallel(state.Dependency);
-        // state.Dependency.Complete();
         
         var meleeAttackJob = new MeleeAttackJob
         {
@@ -70,7 +66,6 @@ public partial struct EnemyBehaviorSystem : ISystem
             time = state.WorldUnmanaged.Time.ElapsedTime
 
         };
-        // rangeAttackJob.Run();
         state.Dependency = rangeAttackJob.Schedule(state.Dependency); //cannot be parallel because of structural change
         state.Dependency.Complete();
         
@@ -151,7 +146,6 @@ public partial struct EnemyBehaviorSystem : ISystem
                     if (Enemies.HasComponent(result[i].Entity) && result[i].Entity != entity)
                     {
                         Vector3 separationDirection = localTransform.Position - EntityPositions.GetRefRO(result[i].Entity).ValueRO.Position;
-                        // Vector3 separationDirection = localTransform.Position - result[i].Position;
                         separationDirection = separationDirection.normalized;
                         separationDirection.y = 0f;
                         localTransform.Position += new float3(separationDirection * separationForce * deltaTime);
@@ -189,7 +183,6 @@ public partial struct EnemyBehaviorSystem : ISystem
                 float distance = Vector3.Distance(PlayerTransform.Position, localTransform.Position);
                 if (distance <= attackSettings.Range)
                 {
-                    // Debug.Log("Attack");
                     attack.LastAttackTime = 0;
                 }
             }
@@ -270,7 +263,6 @@ public partial struct EnemyBehaviorSystem : ISystem
                 {
                     if (Player.HasComponent(result[i].Entity))
                     {
-                        // Debug.Log("Hit");
                         Ecb.SetComponentEnabled<IsDeadComponent>(chunkIndex, entity,true);
                     }
                 }

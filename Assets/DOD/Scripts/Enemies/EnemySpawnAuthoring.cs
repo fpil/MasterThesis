@@ -10,6 +10,7 @@ namespace Assets.DOD.Scripts.Enemies
         public GameObject rangePrefab;
         public int meleeAmount;
         public int rangeAmount;
+        public GameObject throwablePrefab;
         class EnemyBaker : Baker<EnemySpawnAuthoring>
         {
             public override void Bake(EnemySpawnAuthoring authoring)
@@ -25,6 +26,10 @@ namespace Assets.DOD.Scripts.Enemies
                     RangeAmount = authoring.rangeAmount, 
                     SpawnPosition = authoring.gameObject.transform.position
                 } );
+                AddComponent(new ThrowablePrefabs
+                {
+                    ThrowablePrefab = GetEntity(authoring.throwablePrefab),
+                } );
             }
         }
     }
@@ -33,6 +38,10 @@ namespace Assets.DOD.Scripts.Enemies
     {
         public Entity MeleePrefab;
         public Entity RangePrefab;
+    }
+    public struct ThrowablePrefabs : IComponentData
+    {
+        public Entity ThrowablePrefab;
     }
     public struct EnemySpawnSettings : IComponentData
     {

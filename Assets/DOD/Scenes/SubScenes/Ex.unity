@@ -58685,13 +58685,19 @@ PrefabInstance:
     - target: {fileID: 3870486635128729312, guid: 7444feb5073911a4d9b45a914cf8ec87,
         type: 3}
       propertyPath: meleeAmount
-      value: 4000
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 3870486635128729312, guid: 7444feb5073911a4d9b45a914cf8ec87,
         type: 3}
       propertyPath: rangeAmount
-      value: 4000
+      value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 3870486635128729312, guid: 7444feb5073911a4d9b45a914cf8ec87,
+        type: 3}
+      propertyPath: throwablePrefab
+      value: 
+      objectReference: {fileID: 1907918821771943251, guid: de24d449f80e35e498471868684c2002,
+        type: 3}
     - target: {fileID: 4455850259495268369, guid: 7444feb5073911a4d9b45a914cf8ec87,
         type: 3}
       propertyPath: m_RootOrder

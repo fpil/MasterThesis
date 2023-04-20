@@ -14,9 +14,14 @@ using RaycastHit = Unity.Physics.RaycastHit;
 public partial struct EnemyBehaviorSystem : ISystem
 {
     private EntityQuery playerQuery;
+    private EntityQuery throwableQuery;
     public void OnCreate(ref SystemState state)
     {
         playerQuery = state.GetEntityQuery(ComponentType.ReadOnly<PlayerTagComponent>());
+        throwableQuery = new EntityQueryBuilder(state.WorldUpdateAllocator)
+            .WithAll<ThrowableTag>()
+            .WithNone<EntityInUseComponent>()
+            .Build(ref state);
     }
 
     public void OnDestroy(ref SystemState state)
@@ -57,27 +62,34 @@ public partial struct EnemyBehaviorSystem : ISystem
         };
         state.Dependency = meleeAttackJob.ScheduleParallel(state.Dependency);
         state.Dependency.Complete();
-        
-        var rangeAttackJob = new RangeAttackJob
-        {
-            PlayerTransform = playerTransform, 
-            deltaTime = deltaTime, 
-            Ecb = ecb,
-            time = state.WorldUnmanaged.Time.ElapsedTime
 
-        };
-        state.Dependency = rangeAttackJob.Schedule(state.Dependency); //cannot be parallel because of structural change
-        state.Dependency.Complete();
-        
-        var throwableParabolaJob = new ThrowableParabolaJob()
+        var rangeAttackJob2 = new RangeAttackJob2
         {
-            time = state.WorldUnmanaged.Time.ElapsedTime,
-            Ecb = ecb.AsParallelWriter(),
-            world = collisionWorld,
-            Player = SystemAPI.GetComponentLookup<PlayerTagComponent>(true)
         };
-        state.Dependency = throwableParabolaJob.ScheduleParallel(state.Dependency);
+        state.Dependency = rangeAttackJob2.Schedule(state.Dependency); //cannot be parallel because of structural change
         state.Dependency.Complete();
+
+
+        // var rangeAttackJob = new RangeAttackJob
+        // {
+        //     PlayerTransform = playerTransform, 
+        //     deltaTime = deltaTime, 
+        //     Ecb = ecb,
+        //     time = state.WorldUnmanaged.Time.ElapsedTime
+        //
+        // };
+        // state.Dependency = rangeAttackJob.Schedule(state.Dependency); //cannot be parallel because of structural change
+        // state.Dependency.Complete();
+
+        // var throwableParabolaJob = new ThrowableParabolaJob()
+        // {
+        //     time = state.WorldUnmanaged.Time.ElapsedTime,
+        //     Ecb = ecb.AsParallelWriter(),
+        //     world = collisionWorld,
+        //     Player = SystemAPI.GetComponentLookup<PlayerTagComponent>(true)
+        // };
+        // state.Dependency = throwableParabolaJob.ScheduleParallel(state.Dependency);
+        // state.Dependency.Complete();
 
     }
     
@@ -188,6 +200,19 @@ public partial struct EnemyBehaviorSystem : ISystem
             }
         }
     }
+    
+    [BurstCompile]
+    [WithAll(typeof(RangeEnemyTag))]
+    public partial struct RangeAttackJob2 : IJobEntity
+    {
+        void Execute(in LocalTransform localTransform)
+        {
+            Debug.Log("asdf");
+        }
+    }
+    
+    
+    
     [BurstCompile]
     [WithAll(typeof(RangeEnemyTag))]
     public partial struct RangeAttackJob : IJobEntity

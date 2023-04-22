@@ -70,31 +70,11 @@ public partial struct EnemyBehaviorSystem : ISystem
         state.Dependency = meleeAttackJob.ScheduleParallel(state.Dependency);
         state.Dependency.Complete();
 
-        // var availAbleThrowables = throwableQuery.ToComponentDataArray<ThrowableSettingsComponent>(Allocator.Temp);
         var availAbleThrowables = throwableQuery.ToEntityArray(Allocator.TempJob);
         NativeList<Entity> nativeList = new NativeList<Entity>(Allocator.TempJob);
-        nativeList.AddRange(availAbleThrowables);        // Debug.Log(availAbleThrowables.Length);
-        // for (int i = 0; i < availAbleThrowables.Length; i++)
-        // {
-        //     availAbleThrowables[i] = new ThrowableSettingsComponent
-        //     {
-        //         targetPos = playerTransform.Position
-        //     };
-        //     
-        //     // targetPos = PlayerTransform.Position, 
-        //     // startPos = localTransform.Position,
-        //     // distance = Vector3.Distance(localTransform.Position,PlayerTransform.Position),
-        //     // startTime = time, 
-        //     // terrainHeight = -1.52f,
-        //     // height = 2f
-        //     
-        // }
-        // for (int i = 0; i < availAbleThrowables.Length; i++)
-        // {
-        //     Debug.Log(availAbleThrowables[i].targetPos);
-        // }
-        // availAbleThrowables[0].targetPos = playerTransform.Position;
-        var rangeAttackJob2 = new RangeAttackJob2
+        nativeList.AddRange(availAbleThrowables);
+        
+        var rangeAttackJob = new RangeAttackJob
         {
             availAbleThrowables= nativeList,
             playerTransform = playerTransform,
@@ -102,21 +82,9 @@ public partial struct EnemyBehaviorSystem : ISystem
             Ecb = ecb,
             time = state.WorldUnmanaged.Time.ElapsedTime
         };
-        state.Dependency = rangeAttackJob2.Schedule(state.Dependency); //cannot be parallel because of structural change
+        state.Dependency = rangeAttackJob.Schedule(state.Dependency); //cannot be parallel because of structural change
         state.Dependency.Complete();
         availAbleThrowables.Dispose();
-
-
-        // var rangeAttackJob = new RangeAttackJob
-        // {
-        //     PlayerTransform = playerTransform, 
-        //     deltaTime = deltaTime, 
-        //     Ecb = ecb,
-        //     time = state.WorldUnmanaged.Time.ElapsedTime
-        //
-        // };
-        // state.Dependency = rangeAttackJob.Schedule(state.Dependency); //cannot be parallel because of structural change
-        // state.Dependency.Complete();
 
         var throwableParabolaJob = new ThrowableParabolaJob()
         {
@@ -238,21 +206,18 @@ public partial struct EnemyBehaviorSystem : ISystem
         }
     }
     
+    
     [BurstCompile]
     [WithAll(typeof(RangeEnemyTag))]
-    public partial struct RangeAttackJob2 : IJobEntity
+    public partial struct RangeAttackJob : IJobEntity
     {
         public NativeList<Entity> availAbleThrowables { get; set; }
         [field: ReadOnly]public LocalTransform playerTransform { get; set; }
         public double time { get; set; }
-
         public EntityCommandBuffer Ecb;
-
         public float deltaTime;
-
         void Execute(in LocalTransform localTransform, ref AttackComponent attack, in RangeAttackSettingsComponent attackSettings)
         {
-            
             attack.LastAttackTime += deltaTime;
             if (attack.LastAttackTime > attackSettings.MaxTimer)
             {
@@ -278,46 +243,6 @@ public partial struct EnemyBehaviorSystem : ISystem
             }
         }
     }
-    
-    
-    
-    [BurstCompile]
-    [WithAll(typeof(RangeEnemyTag))]
-    public partial struct RangeAttackJob : IJobEntity
-    {
-        public EntityCommandBuffer Ecb;
-
-        public float deltaTime;
-        public LocalTransform PlayerTransform { get; set; }
-        public double time { get; set; }
-
-        void Execute(in LocalTransform localTransform, ref AttackComponent attack, in RangeAttackSettingsComponent attackSettings, in ThrowableAspect throwableAspect)
-        {
-            attack.LastAttackTime += deltaTime;
-            if (attack.LastAttackTime > attackSettings.MaxTimer)
-            {
-                float distance = Vector3.Distance(PlayerTransform.Position, localTransform.Position);
-                if (distance <= attackSettings.Range)
-                {
-                    var instance = Ecb.Instantiate(throwableAspect.ThrowablePrefab);
-                    Ecb.SetComponent(instance, LocalTransform.FromPosition(localTransform.Position));
-                    Ecb.AddComponent<ThrowableTag>(instance);
-                    Ecb.AddComponent(instance, new ThrowableSettingsComponent
-                    {
-                        targetPos = PlayerTransform.Position, 
-                        startPos = localTransform.Position,
-                        distance = Vector3.Distance(localTransform.Position,PlayerTransform.Position),
-                        startTime = time, 
-                        terrainHeight = -1.52f,
-                        height = 2f
-                    });
-                    Ecb.AddComponent<IsDeadComponent>(instance);
-                    Ecb.SetComponentEnabled(instance,ComponentType.ReadWrite<IsDeadComponent>(), false);
-                    attack.LastAttackTime = 0;
-                }
-            }
-        }
-    }
     [BurstCompile]
     [WithAll(typeof(ThrowableTag))]
     [WithAll(typeof(EntityInUseComponent))]
@@ -327,8 +252,6 @@ public partial struct EnemyBehaviorSystem : ISystem
         [field: ReadOnly] public CollisionWorld world { get; set; }
         [ReadOnly]
         public ComponentLookup<PlayerTagComponent> Player;
-
-
         public double time { get; set; }
 
         void Execute([ChunkIndexInQuery] int chunkIndex, in Entity entity, ref LocalTransform localTransform, in ThrowableSettingsComponent throwableSettingsComponent)
@@ -345,7 +268,6 @@ public partial struct EnemyBehaviorSystem : ISystem
             
             if (localTransform.Position.y <= throwableSettingsComponent.targetPos.y)
             {
-                // Ecb.SetComponentEnabled<IsDeadComponent>(chunkIndex, entity,true);
                 Ecb.SetComponentEnabled<EntityInUseComponent>(chunkIndex, entity,false);
             }
             
@@ -358,7 +280,6 @@ public partial struct EnemyBehaviorSystem : ISystem
                 {
                     if (Player.HasComponent(result[i].Entity))
                     {
-                        // Ecb.SetComponentEnabled<IsDeadComponent>(chunkIndex, entity,true);
                         Ecb.SetComponentEnabled<EntityInUseComponent>(chunkIndex, entity,false);
                     }
                 }

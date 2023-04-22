@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-using System.Linq;
 using DOD.Scripts.Bullets;
 using DOD.Scripts.Enemies;
 using DOD.Scripts.Environment;
@@ -17,8 +15,6 @@ public partial struct EnemyBehaviorSystem : ISystem
 {
     private EntityQuery playerQuery;
     private EntityQuery throwableQuery;
-    private ThrowableSettingsComponent _throwableSettingsComponent;
-
     public void OnCreate(ref SystemState state)
     {
         playerQuery = state.GetEntityQuery(ComponentType.ReadOnly<PlayerTagComponent>());
@@ -27,8 +23,6 @@ public partial struct EnemyBehaviorSystem : ISystem
             .WithAllRW<ThrowableSettingsComponent>()
             .WithNone<EntityInUseComponent>()
             .Build(ref state);
-        
-        // throwableQuery = state.GetEntityQuery(typeof(ThrowableTag), typeof(ThrowableSettingsComponent), typeof(EntityInUseComponent));
     }
 
     public void OnDestroy(ref SystemState state)

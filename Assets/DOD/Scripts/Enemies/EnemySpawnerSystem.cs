@@ -129,21 +129,11 @@ public partial struct EnemySpawnerSystem : ISystem
                 var instance = Ecb.Instantiate(enemySpawnAspect.ThrowablePrefab);
                 Ecb.SetComponent(instance, LocalTransform.FromPosition(float3.zero));
                 Ecb.AddComponent<ThrowableTag>(instance);
-                Ecb.AddComponent(instance, new ThrowableSettingsComponent
-                {
-                    // targetPos = PlayerTransform.Position, 
-                    // startPos = localTransform.Position,
-                    // distance = Vector3.Distance(localTransform.Position,PlayerTransform.Position),
-                    // startTime = time, 
-                    // terrainHeight = -1.52f,
-                    // height = 2f
-                });
+                Ecb.AddComponent(instance, new ThrowableSettingsComponent());
                 Ecb.AddComponent<IsDeadComponent>(instance);
                 Ecb.SetComponentEnabled(instance,ComponentType.ReadWrite<IsDeadComponent>(), false);
                 Ecb.AddComponent<EntityInUseComponent>(instance);
                 Ecb.SetComponentEnabled(instance,ComponentType.ReadWrite<EntityInUseComponent>(), false);
-                // attack.LastAttackTime = 0;
-                
             }
         }
     }

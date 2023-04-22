@@ -226,7 +226,8 @@ public partial struct EnemyBehaviorSystem : ISystem
                         height = 2f
                     });
                     Ecb.AddComponent<IsDeadComponent>(instance);
-                    Ecb.SetComponentEnabled(instance,typeof(IsDeadComponent), false);
+                    Ecb.SetComponentEnabled(instance,ComponentType.ReadWrite<IsDeadComponent>(), false);
+
                     attack.LastAttackTime = 0;
                 }
             }

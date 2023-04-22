@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using System.Linq;
 using DOD.Scripts.Bullets;
 using DOD.Scripts.Enemies;
 using DOD.Scripts.Environment;
@@ -15,13 +17,18 @@ public partial struct EnemyBehaviorSystem : ISystem
 {
     private EntityQuery playerQuery;
     private EntityQuery throwableQuery;
+    private ThrowableSettingsComponent _throwableSettingsComponent;
+
     public void OnCreate(ref SystemState state)
     {
         playerQuery = state.GetEntityQuery(ComponentType.ReadOnly<PlayerTagComponent>());
         throwableQuery = new EntityQueryBuilder(state.WorldUpdateAllocator)
             .WithAll<ThrowableTag>()
+            .WithAllRW<ThrowableSettingsComponent>()
             .WithNone<EntityInUseComponent>()
             .Build(ref state);
+        
+        // throwableQuery = state.GetEntityQuery(typeof(ThrowableTag), typeof(ThrowableSettingsComponent), typeof(EntityInUseComponent));
     }
 
     public void OnDestroy(ref SystemState state)
@@ -63,11 +70,41 @@ public partial struct EnemyBehaviorSystem : ISystem
         state.Dependency = meleeAttackJob.ScheduleParallel(state.Dependency);
         state.Dependency.Complete();
 
+        // var availAbleThrowables = throwableQuery.ToComponentDataArray<ThrowableSettingsComponent>(Allocator.Temp);
+        var availAbleThrowables = throwableQuery.ToEntityArray(Allocator.TempJob);
+        NativeList<Entity> nativeList = new NativeList<Entity>(Allocator.TempJob);
+        nativeList.AddRange(availAbleThrowables);        // Debug.Log(availAbleThrowables.Length);
+        // for (int i = 0; i < availAbleThrowables.Length; i++)
+        // {
+        //     availAbleThrowables[i] = new ThrowableSettingsComponent
+        //     {
+        //         targetPos = playerTransform.Position
+        //     };
+        //     
+        //     // targetPos = PlayerTransform.Position, 
+        //     // startPos = localTransform.Position,
+        //     // distance = Vector3.Distance(localTransform.Position,PlayerTransform.Position),
+        //     // startTime = time, 
+        //     // terrainHeight = -1.52f,
+        //     // height = 2f
+        //     
+        // }
+        // for (int i = 0; i < availAbleThrowables.Length; i++)
+        // {
+        //     Debug.Log(availAbleThrowables[i].targetPos);
+        // }
+        // availAbleThrowables[0].targetPos = playerTransform.Position;
         var rangeAttackJob2 = new RangeAttackJob2
         {
+            availAbleThrowables= nativeList,
+            playerTransform = playerTransform,
+            deltaTime = deltaTime, 
+            Ecb = ecb,
+            time = state.WorldUnmanaged.Time.ElapsedTime
         };
         state.Dependency = rangeAttackJob2.Schedule(state.Dependency); //cannot be parallel because of structural change
         state.Dependency.Complete();
+        availAbleThrowables.Dispose();
 
 
         // var rangeAttackJob = new RangeAttackJob
@@ -81,15 +118,15 @@ public partial struct EnemyBehaviorSystem : ISystem
         // state.Dependency = rangeAttackJob.Schedule(state.Dependency); //cannot be parallel because of structural change
         // state.Dependency.Complete();
 
-        // var throwableParabolaJob = new ThrowableParabolaJob()
-        // {
-        //     time = state.WorldUnmanaged.Time.ElapsedTime,
-        //     Ecb = ecb.AsParallelWriter(),
-        //     world = collisionWorld,
-        //     Player = SystemAPI.GetComponentLookup<PlayerTagComponent>(true)
-        // };
-        // state.Dependency = throwableParabolaJob.ScheduleParallel(state.Dependency);
-        // state.Dependency.Complete();
+        var throwableParabolaJob = new ThrowableParabolaJob()
+        {
+            time = state.WorldUnmanaged.Time.ElapsedTime,
+            Ecb = ecb.AsParallelWriter(),
+            world = collisionWorld,
+            Player = SystemAPI.GetComponentLookup<PlayerTagComponent>(true)
+        };
+        state.Dependency = throwableParabolaJob.ScheduleParallel(state.Dependency);
+        state.Dependency.Complete();
 
     }
     
@@ -205,9 +242,40 @@ public partial struct EnemyBehaviorSystem : ISystem
     [WithAll(typeof(RangeEnemyTag))]
     public partial struct RangeAttackJob2 : IJobEntity
     {
-        void Execute(in LocalTransform localTransform)
+        public NativeList<Entity> availAbleThrowables { get; set; }
+        [field: ReadOnly]public LocalTransform playerTransform { get; set; }
+        public double time { get; set; }
+
+        public EntityCommandBuffer Ecb;
+
+        public float deltaTime;
+
+        void Execute(in LocalTransform localTransform, ref AttackComponent attack, in RangeAttackSettingsComponent attackSettings)
         {
-            Debug.Log("asdf");
+            
+            attack.LastAttackTime += deltaTime;
+            if (attack.LastAttackTime > attackSettings.MaxTimer)
+            {
+                float distance = Vector3.Distance(playerTransform.Position, localTransform.Position);
+                if (distance <= attackSettings.Range)
+                {
+                    if (availAbleThrowables.Length != 0)
+                    {
+                        Ecb.SetComponent(availAbleThrowables[0], new ThrowableSettingsComponent
+                        {
+                            targetPos = playerTransform.Position, 
+                            startPos = localTransform.Position,
+                            distance = Vector3.Distance(localTransform.Position,playerTransform.Position),
+                            startTime = time, 
+                            terrainHeight = -1.52f,
+                            height = 2f
+                        });
+                        Ecb.SetComponentEnabled(availAbleThrowables[0],ComponentType.ReadWrite<EntityInUseComponent>(), true);
+                        availAbleThrowables.RemoveAt(0);
+                        attack.LastAttackTime = 0;
+                    }
+                }
+            }
         }
     }
     
@@ -252,6 +320,7 @@ public partial struct EnemyBehaviorSystem : ISystem
     }
     [BurstCompile]
     [WithAll(typeof(ThrowableTag))]
+    [WithAll(typeof(EntityInUseComponent))]
     public partial struct ThrowableParabolaJob : IJobEntity
     {
         public EntityCommandBuffer.ParallelWriter Ecb;
@@ -276,7 +345,8 @@ public partial struct EnemyBehaviorSystem : ISystem
             
             if (localTransform.Position.y <= throwableSettingsComponent.targetPos.y)
             {
-                Ecb.SetComponentEnabled<IsDeadComponent>(chunkIndex, entity,true);
+                // Ecb.SetComponentEnabled<IsDeadComponent>(chunkIndex, entity,true);
+                Ecb.SetComponentEnabled<EntityInUseComponent>(chunkIndex, entity,false);
             }
             
             //Collision check
@@ -288,7 +358,8 @@ public partial struct EnemyBehaviorSystem : ISystem
                 {
                     if (Player.HasComponent(result[i].Entity))
                     {
-                        Ecb.SetComponentEnabled<IsDeadComponent>(chunkIndex, entity,true);
+                        // Ecb.SetComponentEnabled<IsDeadComponent>(chunkIndex, entity,true);
+                        Ecb.SetComponentEnabled<EntityInUseComponent>(chunkIndex, entity,false);
                     }
                 }
             }

@@ -124,7 +124,7 @@ public partial struct EnemySpawnerSystem : ISystem
             }
             
             //Make pool
-            for (int i = 0; i < enemySpawnAspect.RangeAmount*cycleNumber; i++)
+            for (int i = 0; i < (enemySpawnAspect.RangeAmount*cycleNumber)/4; i++)
             {
                 var instance = Ecb.Instantiate(enemySpawnAspect.ThrowablePrefab);
                 Ecb.SetComponent(instance, LocalTransform.FromPosition(float3.zero));

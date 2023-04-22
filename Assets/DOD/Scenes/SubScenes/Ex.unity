@@ -58685,12 +58685,12 @@ PrefabInstance:
     - target: {fileID: 3870486635128729312, guid: 7444feb5073911a4d9b45a914cf8ec87,
         type: 3}
       propertyPath: meleeAmount
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 3870486635128729312, guid: 7444feb5073911a4d9b45a914cf8ec87,
         type: 3}
       propertyPath: rangeAmount
-      value: 1
+      value: 2000
       objectReference: {fileID: 0}
     - target: {fileID: 3870486635128729312, guid: 7444feb5073911a4d9b45a914cf8ec87,
         type: 3}

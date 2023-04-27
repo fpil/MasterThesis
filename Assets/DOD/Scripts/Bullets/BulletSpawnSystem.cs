@@ -5,7 +5,7 @@ using Unity.Transforms;
 using UnityEngine;
 using Random = Unity.Mathematics.Random;
 
-
+[BurstCompile]
 public partial struct BulletSpawnSystem : ISystem
 {
     private Random generator;

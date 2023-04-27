@@ -12,7 +12,7 @@ using Unity.VisualScripting;
 using UnityEngine;
 using RaycastHit = Unity.Physics.RaycastHit;
 
-
+[BurstCompile]
 public partial struct EnemyBehaviorSystem : ISystem
 {
     private EntityQuery playerQuery;
@@ -25,6 +25,7 @@ public partial struct EnemyBehaviorSystem : ISystem
     {
     }
 
+    [BurstCompile]
     public void OnUpdate(ref SystemState state)
     {
         Entity playerEntity = playerQuery.GetSingletonEntity(); //Maybe not the best approach to use a singleton

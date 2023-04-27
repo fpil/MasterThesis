@@ -1,3 +1,4 @@
+using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
@@ -55,7 +56,7 @@ public partial struct EnemySpawnerSystem : ISystem
             }
         }
     }
-    
+    [BurstCompile]
     public partial struct SpawnEnemyJob : IJobEntity
     {
         public EntityCommandBuffer Ecb;
@@ -79,7 +80,8 @@ public partial struct EnemySpawnerSystem : ISystem
                     value = 10
                 });
                 Ecb.AddComponent<IsDeadComponent>(instance);
-                Ecb.SetComponentEnabled(instance,typeof(IsDeadComponent), false);
+                // Ecb.SetComponentEnabled(instance,typeof(IsDeadComponent), false);
+                Ecb.SetComponentEnabled(instance,ComponentType.ReadWrite<IsDeadComponent>(), false);
                 Ecb.AddComponent(instance, new AttackComponent());
                 Ecb.AddSharedComponent(instance, new MeleeAttackSettingsComponent
                 {
@@ -101,7 +103,8 @@ public partial struct EnemySpawnerSystem : ISystem
                     value = 20
                 });
                 Ecb.AddComponent<IsDeadComponent>(instance);
-                Ecb.SetComponentEnabled(instance,typeof(IsDeadComponent), false);
+                // Ecb.SetComponentEnabled(instance,typeof(IsDeadComponent), false);
+                Ecb.SetComponentEnabled(instance,ComponentType.ReadWrite<IsDeadComponent>(), false);
                 Ecb.AddComponent(instance, new AttackComponent());
                 Ecb.AddSharedComponent(instance, new RangeAttackSettingsComponent
                 {

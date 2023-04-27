@@ -1,4 +1,5 @@
 using Assets.DOD.Scripts.Bullets;
+using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Physics;
@@ -9,6 +10,7 @@ using RaycastHit = Unity.Physics.RaycastHit;
 namespace DOD.Scripts.Bullets
 {
     [UpdateAfter(typeof(BulletSpawnSystem))]
+    [BurstCompile]
     public partial struct BulletBehaviourSystem : ISystem
     {
         public void OnCreate(ref SystemState state)
@@ -19,6 +21,7 @@ namespace DOD.Scripts.Bullets
         {
         }
 
+        [BurstCompile]
         public void OnUpdate(ref SystemState state)
         {
             var deltaTime = state.WorldUnmanaged.Time.DeltaTime;
@@ -53,6 +56,7 @@ namespace DOD.Scripts.Bullets
         }
 
         [WithAll(typeof(BulletTag))]
+        [BurstCompile]
         public partial struct UpdateBulletPositionJob : IJobEntity
         {
             public float deltaTime;
@@ -78,6 +82,7 @@ namespace DOD.Scripts.Bullets
         
         [UpdateAfter(typeof(UpdateBulletPositionJob))]
         [WithAll(typeof(BulletTag))]
+        [BurstCompile]
         public partial struct BulletCollisionJob : IJobEntity
         {
             [field: ReadOnly] public CollisionWorld world { get; set; }
@@ -129,6 +134,7 @@ namespace DOD.Scripts.Bullets
         
         [UpdateAfter(typeof(UpdateBulletPositionJob))]
         [WithAll(typeof(BulletTag))]
+        [BurstCompile]
         public partial struct DestroyBulletJob : IJobEntity
         {
             public EntityCommandBuffer.ParallelWriter ECB;

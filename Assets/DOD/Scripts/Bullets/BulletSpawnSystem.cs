@@ -5,7 +5,7 @@ using Unity.Transforms;
 using UnityEngine;
 using Random = Unity.Mathematics.Random;
 
-
+[BurstCompile]
 public partial struct BulletSpawnSystem : ISystem
 {
     private Random generator;
@@ -147,7 +147,9 @@ public partial struct BulletSpawnSystem : ISystem
                 Value = speed
             });
             Ecb.AddComponent<IsDeadComponent>(instance);
-            Ecb.SetComponentEnabled(instance,typeof(IsDeadComponent), false);
+            // Ecb.SetComponentEnabled(instance,typeof(IsDeadComponent), false);
+            Ecb.SetComponentEnabled(instance,ComponentType.ReadWrite<IsDeadComponent>(), false);
+
         }
     }
 }

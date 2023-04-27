@@ -1,3 +1,4 @@
+using Unity.Burst;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Transforms;
@@ -34,6 +35,7 @@ public partial struct EnemySpawnerSystem : ISystem
         state.Enabled = false;
     }
     
+    [BurstCompile]
     public partial struct SpawnEnemyJob : IJobEntity
     {
         public EntityCommandBuffer Ecb;
@@ -56,14 +58,15 @@ public partial struct EnemySpawnerSystem : ISystem
                     value = 10
                 });
                 Ecb.AddComponent<IsDeadComponent>(instance);
-                Ecb.SetComponentEnabled(instance,typeof(IsDeadComponent), false);
+                // Ecb.SetComponentEnabled(instance,typeof(IsDeadComponent), false);
+                Ecb.SetComponentEnabled(instance,ComponentType.ReadWrite<IsDeadComponent>(), false);
                 Ecb.AddComponent(instance, new AttackComponent());
                 Ecb.AddSharedComponent(instance, new MeleeAttackSettingsComponent
                 {
                     Range = 1.5f, 
                     MaxTimer = 1f
                 });
-         }
+            }
         }
     }
 }

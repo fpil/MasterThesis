@@ -1,8 +1,10 @@
 using DOD.Scripts.Bullets;
+using Unity.Burst;
 using Unity.Entities;
 using Unity.Transforms;
 using UnityEngine;
 
+[BurstCompile]
 public partial struct BulletSpawnSystem : ISystem
 {
     public void OnCreate(ref SystemState state)
@@ -13,6 +15,7 @@ public partial struct BulletSpawnSystem : ISystem
     {
     }
 
+    // [BurstCompile]
     public void OnUpdate(ref SystemState state)
     {
         var ecbSingleton = SystemAPI.GetSingleton<BeginSimulationEntityCommandBufferSystem.Singleton>();
@@ -34,6 +37,7 @@ public partial struct BulletSpawnSystem : ISystem
         }
     }
 
+    [BurstCompile]
     public partial struct SpawnBulletJob : IJobEntity
     {
         public EntityCommandBuffer Ecb;

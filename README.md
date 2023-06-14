@@ -32,4 +32,4 @@ more relevant in the field of game development.
 Maintainability, Performance, Entity Component System
 
 ## Quick Shortcuts
-[Master Thesis PDF] ()
+[Master Thesis PDF](https://github.com/fpil/MasterThesis/blob/main/Master_Thesis.pdf)

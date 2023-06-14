@@ -33,3 +33,4 @@ Maintainability, Performance, Entity Component System
 
 ## Quick Shortcuts
 [Master Thesis PDF](https://github.com/fpil/MasterThesis/blob/main/Master_Thesis.pdf)
+[Final DOD version release](https://github.com/fpil/MasterThesis/releases/tag/DOD_iteration_5)

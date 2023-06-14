@@ -30,3 +30,6 @@ more relevant in the field of game development.
 
 **Keywords:** Data-Oriented Design, Object-Oriented Design, Flexibility, Scalability,
 Maintainability, Performance, Entity Component System
+
+## Quick Shortcuts
+[Master Thesis PDF] ()
